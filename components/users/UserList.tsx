@@ -30,7 +30,7 @@ export function UserList({ users }: UserListProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push('/dashboard')}
             className="p-2 rounded-lg hover:bg-muted transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
