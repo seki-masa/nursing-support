@@ -3,8 +3,9 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { CareRecipientList } from '@/components/sidebar/CareRecipientList'
 import { Suspense } from 'react'
-import { HeartPulse, LogOut } from 'lucide-react'
+import { HeartPulse } from 'lucide-react'
 import { SignOutButton } from '@/components/SignOutButton'
+import Link from 'next/link'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
@@ -27,7 +28,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
         {/* User info / logout */}
         <div className="border-t px-3 py-2 flex items-center justify-between text-xs text-muted-foreground">
-          <span className="truncate">{session.user?.name}</span>
+          <Link
+            href={`/users/${(session.user as { id?: string }).id}`}
+            className="truncate hover:text-foreground hover:underline transition-colors"
+          >
+            {session.user?.name}
+          </Link>
           <SignOutButton />
         </div>
       </aside>
