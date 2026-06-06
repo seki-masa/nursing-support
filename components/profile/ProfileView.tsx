@@ -53,7 +53,7 @@ export function ProfileView({ recipient, onDelete }: ProfileViewProps) {
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push(`/dashboard?id=${recipient.id}`)}
             className="p-2 rounded-lg hover:bg-muted transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
