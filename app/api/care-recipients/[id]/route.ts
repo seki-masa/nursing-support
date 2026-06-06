@@ -83,7 +83,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ code: 'DELETED', error: 'この介護対象者は既に削除されています' }, { status: 410 })
   }
   if (current.updatedAt.toISOString() !== expectedUpdatedAt) {
-    return NextResponse.json({ code: 'CONFLICT', error: '他のユーザーがこのデータを編集しました。最新のデータを確認してください' }, { status: 409 })
+    return NextResponse.json({ code: 'CONFLICT', error: '他のユーザがこのデータを編集しました。最新のデータを確認してください' }, { status: 409 })
   }
 
   const updated = await prisma.$transaction(async (tx) => {

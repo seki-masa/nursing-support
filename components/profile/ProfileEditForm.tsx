@@ -95,7 +95,7 @@ export function ProfileEditForm({ recipient, mode }: ProfileEditFormProps) {
         return
       }
       if (res.status === 409) {
-        toast({ title: '他のユーザーがこのデータを編集しました。最新のデータを確認してください', variant: 'destructive' })
+        toast({ title: '他のユーザがこのデータを編集しました。最新のデータを確認してください', variant: 'destructive' })
         return
       }
       if (!res.ok) throw new Error()

@@ -32,7 +32,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     select: { id: true, name: true, email: true, role: true, createdAt: true, updatedAt: true },
   })
 
-  if (!user) return NextResponse.json({ error: 'ユーザーが見つかりません' }, { status: 404 })
+  if (!user) return NextResponse.json({ error: 'ユーザが見つかりません' }, { status: 404 })
 
   return NextResponse.json(user)
 }

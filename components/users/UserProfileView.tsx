@@ -34,7 +34,7 @@ export function UserProfileView({ user, currentUserId, currentUserRole }: UserPr
     if (!confirm(`${user.name} さんを削除しますか？\nこの操作は元に戻せません。`)) return
     const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' })
     if (res.ok) {
-      toast({ title: 'ユーザーを削除しました' })
+      toast({ title: 'ユーザを削除しました' })
       router.push('/users')
       router.refresh()
     } else {
@@ -87,7 +87,7 @@ export function UserProfileView({ user, currentUserId, currentUserRole }: UserPr
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <User className="h-4 w-4" />
-            ユーザー情報
+            ユーザ情報
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4 text-sm">

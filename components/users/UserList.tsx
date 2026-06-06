@@ -35,7 +35,7 @@ export function UserList({ users }: UserListProps) {
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <h1 className="text-xl font-bold">ユーザー管理</h1>
+          <h1 className="text-xl font-bold">ユーザ管理</h1>
         </div>
         <Button size="sm" onClick={() => router.push('/users/new')}>
           <Plus className="h-4 w-4 mr-1.5" />
@@ -47,7 +47,7 @@ export function UserList({ users }: UserListProps) {
       <div className="border rounded-xl overflow-hidden">
         {users.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground text-sm">
-            ユーザーが登録されていません
+            ユーザが登録されていません
           </div>
         ) : (
           <table className="w-full text-sm">

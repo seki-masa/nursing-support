@@ -87,7 +87,7 @@ export function UserEditForm({ user, mode, currentUserRole }: UserEditFormProps)
       if (!res.ok) throw new Error()
 
       const saved = await res.json()
-      toast({ title: mode === 'create' ? 'ユーザーを登録しました' : '更新しました' })
+      toast({ title: mode === 'create' ? 'ユーザを登録しました' : '更新しました' })
       router.push(`/users/${saved.id}`)
       router.refresh()
     } catch {
@@ -109,13 +109,13 @@ export function UserEditForm({ user, mode, currentUserRole }: UserEditFormProps)
           <ArrowLeft className="h-4 w-4" />
         </button>
         <h1 className="text-xl font-bold">
-          {mode === 'create' ? 'ユーザー新規登録' : 'ユーザー編集'}
+          {mode === 'create' ? 'ユーザ新規登録' : 'ユーザ編集'}
         </h1>
       </div>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">ユーザー情報</CardTitle>
+          <CardTitle className="text-base">ユーザ情報</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1">
