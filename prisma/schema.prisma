@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum BloodType {
+  A_PLUS
+  A_MINUS
+  B_PLUS
+  B_MINUS
+  O_PLUS
+  O_MINUS
+  AB_PLUS
+  AB_MINUS
+}
+
+enum CareStatus {
+  CRITICAL      // 危篤
+  SEVERE        // 重篤
+  CAUTION       // 要注意
+  OBSERVATION   // 経過観察
+  HEALTHY       // 健康
+  DECEASED      // 死亡
+  DISCHARGED    // 退院
+}
+
+enum Edema {
+  NONE
+  MILD
+  MODERATE
+  SEVERE
+}
+
+enum InputMethod {
+  MANUAL
+  WEARABLE
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(STAFF)
+  vitals       Vital[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model CareRecipient {
+  id                String                @id @default(cuid())
+  name              String
+  nameKana          String
+  gender            Gender
+  birthDate         DateTime
+  bloodType         BloodType?
+  room              String?
+  notes             String?
+  deletedAt         DateTime?
+  families          CareRecipientFamily[]
+  medicalConditions MedicalCondition[]
+  allergies         Allergy[]
+  vitals            Vital[]
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+}
+
+model Family {
+  id           String                @id @default(cuid())
+  name         String
+  relationship String
+  phone        String?
+  email        String?
+  notes        String?
+  recipients   CareRecipientFamily[]
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+}
+
+model CareRecipientFamily {
+  careRecipientId String
+  familyId        String
+  careRecipient   CareRecipient @relation(fields: [careRecipientId], references: [id], onDelete: Cascade)
+  family          Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@id([careRecipientId, familyId])
+}
+
+model MedicalCondition {
+  id              String        @id @default(cuid())
+  careRecipientId String
+  careRecipient   CareRecipient @relation(fields: [careRecipientId], references: [id], onDelete: Cascade)
+  name            String
+  createdAt       DateTime      @default(now())
+}
+
+model Allergy {
+  id              String        @id @default(cuid())
+  careRecipientId String
+  careRecipient   CareRecipient @relation(fields: [careRecipientId], references: [id], onDelete: Cascade)
+  name            String
+  createdAt       DateTime      @default(now())
+}
+
+model Vital {
+  id                 String        @id @default(cuid())
+  careRecipientId    String
+  careRecipient      CareRecipient @relation(fields: [careRecipientId], references: [id], onDelete: Cascade)
+  recordedAt         DateTime      @default(now())
+  recordedBy         String
+  recorder           User          @relation(fields: [recordedBy], references: [id])
+  systolicBp         Int?
+  diastolicBp        Int?
+  heartRate          Int?
+  respiratoryRate    Int?
+  temperature        Decimal?      @db.Decimal(4, 1)
+  spo2               Int?
+  weight             Decimal?      @db.Decimal(5, 2)
+  bloodSugar         Int?
+  consciousnessLevel Int?
+  painScore          Int?
+  edema              Edema?
+  urineOutput        Int?
+  inputMethod        InputMethod   @default(MANUAL)
+  status             CareStatus?
+  deceasedAt         DateTime?
+  dischargedAt       DateTime?
+  notes              String?
+  createdAt          DateTime      @default(now())
+
+  @@index([careRecipientId, recordedAt(sort: Desc)])
+}
