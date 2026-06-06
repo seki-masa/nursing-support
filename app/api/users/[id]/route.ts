@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs'
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
   email: z.string().email().optional(),
+  currentPassword: z.string().optional(),
   password: z.string().min(6).optional(),
   role: z.enum(['ADMIN', 'STAFF']).optional(),
 })
@@ -52,12 +53,24 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { password, role, email, ...rest } = parsed.data
+  const { password, currentPassword, role, email, ...rest } = parsed.data
 
   if (email) {
     const existing = await prisma.user.findFirst({ where: { email, NOT: { id: params.id } } })
     if (existing) {
       return NextResponse.json({ code: 'EMAIL_CONFLICT', error: 'このメールアドレスは既に使用されています' }, { status: 409 })
+    }
+  }
+
+  // 自分自身のパスワード変更時は現在のパスワードを検証
+  if (password && me?.id === params.id) {
+    const target = await prisma.user.findUnique({ where: { id: params.id }, select: { passwordHash: true } })
+    if (!target) {
+      return NextResponse.json({ error: 'ユーザが見つかりません' }, { status: 404 })
+    }
+    const valid = currentPassword ? await bcrypt.compare(currentPassword, target.passwordHash) : false
+    if (!valid) {
+      return NextResponse.json({ code: 'INVALID_PASSWORD', error: '現在のパスワードが正しくありません' }, { status: 422 })
     }
   }
 

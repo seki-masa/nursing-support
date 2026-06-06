@@ -27,6 +27,7 @@ export default async function EditUserPage({ params }: Props) {
       user={user}
       mode="edit"
       currentUserRole={me.role ?? 'STAFF'}
+      currentUserId={me.id}
     />
   )
 }

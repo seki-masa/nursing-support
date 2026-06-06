@@ -24,51 +24,94 @@ interface UserEditFormProps {
   user?: UserData
   mode: 'create' | 'edit'
   currentUserRole: string
+  currentUserId?: string
 }
 
-const createSchema = z.object({
-  name: z.string().min(1, '氏名は必須です'),
-  email: z.string().email('有効なメールアドレスを入力してください'),
-  password: z.string().min(6, 'パスワードは6文字以上です'),
-  role: z.enum(['ADMIN', 'STAFF']),
-})
+function buildSchema(mode: 'create' | 'edit', isOwnProfile: boolean) {
+  if (mode === 'create') {
+    return z
+      .object({
+        name: z.string().min(1, '氏名は必須です'),
+        email: z.string().email('有効なメールアドレスを入力してください'),
+        currentPassword: z.string().optional().or(z.literal('')),
+        password: z.string().min(6, 'パスワードは6文字以上です'),
+        passwordConfirm: z.string().min(1, '確認用パスワードを入力してください'),
+        role: z.enum(['ADMIN', 'STAFF']),
+      })
+      .superRefine((d, ctx) => {
+        if (d.password !== d.passwordConfirm) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['passwordConfirm'], message: 'パスワードが一致しません' })
+        }
+      })
+  }
+  return z
+    .object({
+      name: z.string().min(1, '氏名は必須です'),
+      email: z.string().email('有効なメールアドレスを入力してください'),
+      currentPassword: z.string().optional().or(z.literal('')),
+      password: z.string().optional().or(z.literal('')),
+      passwordConfirm: z.string().optional().or(z.literal('')),
+      role: z.enum(['ADMIN', 'STAFF']).optional(),
+    })
+    .superRefine((d, ctx) => {
+      if (d.password) {
+        if (d.password.length < 6) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['password'], message: 'パスワードは6文字以上です' })
+        }
+        if (d.password !== d.passwordConfirm) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['passwordConfirm'], message: 'パスワードが一致しません' })
+        }
+        if (isOwnProfile && !d.currentPassword) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['currentPassword'], message: '現在のパスワードを入力してください' })
+        }
+      }
+    })
+}
 
-const editSchema = z.object({
-  name: z.string().min(1, '氏名は必須です'),
-  email: z.string().email('有効なメールアドレスを入力してください'),
-  password: z.string().min(6, 'パスワードは6文字以上です').optional().or(z.literal('')),
-  role: z.enum(['ADMIN', 'STAFF']).optional(),
-})
+type FormValues = {
+  name: string
+  email: string
+  currentPassword?: string
+  password?: string
+  passwordConfirm?: string
+  role?: 'ADMIN' | 'STAFF'
+}
 
-export function UserEditForm({ user, mode, currentUserRole }: UserEditFormProps) {
+export function UserEditForm({ user, mode, currentUserRole, currentUserId }: UserEditFormProps) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const isAdmin = currentUserRole === 'ADMIN'
-  const schema = mode === 'create' ? createSchema : editSchema
+  const isOwnProfile = !!currentUserId && currentUserId === user?.id
+  const schema = buildSchema(mode, isOwnProfile)
 
   const {
     register,
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm({
+  } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: user?.name ?? '',
       email: user?.email ?? '',
+      currentPassword: '',
       password: '',
+      passwordConfirm: '',
       role: user?.role ?? 'STAFF',
     },
   })
 
-  const onSubmit = async (data: z.infer<typeof createSchema> | z.infer<typeof editSchema>) => {
+  const onSubmit = async (data: FormValues) => {
     setSaving(true)
     try {
       const body: Record<string, string> = {
         name: data.name,
         email: data.email,
       }
-      if (data.password) body.password = data.password
+      if (data.password) {
+        body.password = data.password
+        if (data.currentPassword) body.currentPassword = data.currentPassword
+      }
       if (isAdmin && data.role) body.role = data.role
 
       const url = mode === 'create' ? '/api/users' : `/api/users/${user!.id}`
@@ -82,6 +125,10 @@ export function UserEditForm({ user, mode, currentUserRole }: UserEditFormProps)
 
       if (res.status === 409) {
         toast({ title: 'このメールアドレスは既に使用されています', variant: 'destructive' })
+        return
+      }
+      if (res.status === 422) {
+        toast({ title: '現在のパスワードが正しくありません', variant: 'destructive' })
         return
       }
       if (!res.ok) throw new Error()
@@ -130,14 +177,6 @@ export function UserEditForm({ user, mode, currentUserRole }: UserEditFormProps)
             {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
           </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="password">
-              パスワード {mode === 'create' ? '*' : '（変更する場合のみ入力）'}
-            </Label>
-            <Input id="password" type="password" {...register('password')} placeholder="6文字以上" />
-            {errors.password && <p className="text-xs text-destructive">{errors.password.message as string}</p>}
-          </div>
-
           {isAdmin && (
             <div className="space-y-1">
               <Label>ロール</Label>
@@ -156,6 +195,40 @@ export function UserEditForm({ user, mode, currentUserRole }: UserEditFormProps)
               />
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Password */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">
+            {mode === 'create' ? 'パスワード設定' : 'パスワード変更'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {mode === 'edit' && isOwnProfile && (
+            <div className="space-y-1">
+              <Label htmlFor="currentPassword">現在のパスワード</Label>
+              <Input id="currentPassword" type="password" {...register('currentPassword')} placeholder="変更する場合は入力" />
+              {errors.currentPassword && <p className="text-xs text-destructive">{errors.currentPassword.message as string}</p>}
+            </div>
+          )}
+
+          <div className="space-y-1">
+            <Label htmlFor="password">
+              {mode === 'create' ? '新しいパスワード *' : '新しいパスワード（変更する場合のみ入力）'}
+            </Label>
+            <Input id="password" type="password" {...register('password')} placeholder="6文字以上" />
+            {errors.password && <p className="text-xs text-destructive">{errors.password.message as string}</p>}
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="passwordConfirm">
+              {mode === 'create' ? 'パスワード（確認用） *' : 'パスワード（確認用）'}
+            </Label>
+            <Input id="passwordConfirm" type="password" {...register('passwordConfirm')} placeholder="同じパスワードを再入力" />
+            {errors.passwordConfirm && <p className="text-xs text-destructive">{errors.passwordConfirm.message as string}</p>}
+          </div>
         </CardContent>
       </Card>
 
