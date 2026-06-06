@@ -40,6 +40,7 @@ export function ProfileView({ recipient, onDelete }: ProfileViewProps) {
     if (!confirm(`${recipient.name} さんのデータを削除しますか？\nこの操作は元に戻せません。`)) return
     const res = await fetch(`/api/care-recipients/${recipient.id}`, { method: 'DELETE' })
     if (res.ok) {
+      window.dispatchEvent(new CustomEvent('careRecipientsUpdated'))
       router.push('/dashboard')
       router.refresh()
       onDelete?.()

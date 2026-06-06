@@ -30,7 +30,11 @@ export function CareRecipientList() {
     }
   }
 
-  useEffect(() => { fetchRecipients() }, [])
+  useEffect(() => {
+    fetchRecipients()
+    window.addEventListener('careRecipientsUpdated', fetchRecipients)
+    return () => window.removeEventListener('careRecipientsUpdated', fetchRecipients)
+  }, [])
 
   const filtered = recipients.filter((r) =>
     r.name.includes(searchQuery) || r.nameKana.includes(searchQuery)

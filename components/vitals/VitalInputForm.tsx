@@ -140,6 +140,7 @@ export function VitalInputForm({ careRecipientId, recipientName }: VitalInputFor
 
       if (!res.ok) throw new Error()
       toast({ title: 'バイタルを記録しました' })
+      window.dispatchEvent(new CustomEvent('careRecipientsUpdated'))
       router.push(`/dashboard?id=${careRecipientId}`)
       router.refresh()
     } catch {
