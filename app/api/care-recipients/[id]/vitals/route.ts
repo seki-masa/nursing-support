@@ -70,6 +70,15 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
+  // 削除チェック
+  const recipient = await prisma.careRecipient.findUnique({
+    where: { id: params.id },
+    select: { deletedAt: true },
+  })
+  if (!recipient || recipient.deletedAt !== null) {
+    return NextResponse.json({ code: 'DELETED', error: 'この介護対象者は既に削除されています' }, { status: 410 })
+  }
+
   const userId = (session.user as { id: string }).id
   const { recordedAt, deceasedAt, dischargedAt, ...data } = parsed.data
 

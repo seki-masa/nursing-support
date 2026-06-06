@@ -138,6 +138,12 @@ export function VitalInputForm({ careRecipientId, recipientName }: VitalInputFor
         body: JSON.stringify(body),
       })
 
+      if (res.status === 410) {
+        toast({ title: 'この介護対象者は既に削除されています', variant: 'destructive' })
+        window.dispatchEvent(new CustomEvent('careRecipientsUpdated'))
+        router.push('/dashboard')
+        return
+      }
       if (!res.ok) throw new Error()
       toast({ title: 'バイタルを記録しました' })
       window.dispatchEvent(new CustomEvent('careRecipientsUpdated'))

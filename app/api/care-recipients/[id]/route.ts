@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
 const updateSchema = z.object({
+  expectedUpdatedAt: z.string(),
   name: z.string().min(1).optional(),
   nameKana: z.string().min(1).optional(),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
@@ -28,7 +29,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
       medicalConditions: { orderBy: { createdAt: 'asc' } },
       allergies: { orderBy: { createdAt: 'asc' } },
       families: { include: { family: true } },
-      // 最新ステータスのバイタル（死亡日時・退院日時の取得も兼ねる）
       vitals: {
         where: { status: { not: null } },
         orderBy: { recordedAt: 'desc' },
@@ -47,6 +47,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const result = {
     ...recipient,
     birthDate: recipient.birthDate.toISOString(),
+    updatedAt: recipient.updatedAt.toISOString(),
     status: latestStatusVital?.status ?? null,
     deceasedAt: latestStatusVital?.deceasedAt?.toISOString() ?? null,
     dischargedAt: latestStatusVital?.dischargedAt?.toISOString() ?? null,
@@ -67,7 +68,23 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { medicalConditions, allergies, birthDate, ...data } = parsed.data
+  const { expectedUpdatedAt, medicalConditions, allergies, birthDate, ...data } = parsed.data
+
+  // 削除・競合チェック
+  const current = await prisma.careRecipient.findUnique({
+    where: { id: params.id },
+    select: { deletedAt: true, updatedAt: true },
+  })
+
+  if (!current) {
+    return NextResponse.json({ code: 'DELETED', error: 'この介護対象者は既に削除されています' }, { status: 410 })
+  }
+  if (current.deletedAt !== null) {
+    return NextResponse.json({ code: 'DELETED', error: 'この介護対象者は既に削除されています' }, { status: 410 })
+  }
+  if (current.updatedAt.toISOString() !== expectedUpdatedAt) {
+    return NextResponse.json({ code: 'CONFLICT', error: '他のユーザーがこのデータを編集しました。最新のデータを確認してください' }, { status: 409 })
+  }
 
   const updated = await prisma.$transaction(async (tx) => {
     if (medicalConditions !== undefined) {
