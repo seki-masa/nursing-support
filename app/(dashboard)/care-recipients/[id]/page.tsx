@@ -29,5 +29,7 @@ export default async function ProfilePage({ params }: Props) {
     families: recipient.families.map((f) => f.family),
   }
 
-  return <ProfileView recipient={data} />
+  const role = (session.user as { role?: string }).role ?? 'STAFF'
+
+  return <ProfileView recipient={data} currentUserRole={role} />
 }

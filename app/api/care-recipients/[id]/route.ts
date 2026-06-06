@@ -120,6 +120,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+  if ((session.user as { role?: string }).role !== 'ADMIN') {
+    return NextResponse.json({ error: '管理者権限が必要です' }, { status: 403 })
+  }
 
   await prisma.careRecipient.update({
     where: { id: params.id },

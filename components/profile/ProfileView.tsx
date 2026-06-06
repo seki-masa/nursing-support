@@ -29,12 +29,14 @@ import {
 
 interface ProfileViewProps {
   recipient: CareRecipientDetail
+  currentUserRole?: string
   onDelete?: () => void
 }
 
-export function ProfileView({ recipient, onDelete }: ProfileViewProps) {
+export function ProfileView({ recipient, currentUserRole, onDelete }: ProfileViewProps) {
   const router = useRouter()
   const age = differenceInYears(new Date(), new Date(recipient.birthDate))
+  const isAdmin = currentUserRole === 'ADMIN'
 
   const handleDelete = async () => {
     if (!confirm(`${recipient.name} さんのデータを削除しますか？\nこの操作は元に戻せません。`)) return
@@ -74,10 +76,12 @@ export function ProfileView({ recipient, onDelete }: ProfileViewProps) {
             <Pencil className="h-4 w-4 mr-1.5" />
             編集
           </Button>
-          <Button variant="destructive" size="sm" onClick={handleDelete}>
-            <Trash2 className="h-4 w-4 mr-1.5" />
-            削除
-          </Button>
+          {isAdmin && (
+            <Button variant="destructive" size="sm" onClick={handleDelete}>
+              <Trash2 className="h-4 w-4 mr-1.5" />
+              削除
+            </Button>
+          )}
         </div>
       </div>
 
