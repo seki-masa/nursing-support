@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from '@/components/ui/use-toast'
-import { ArrowLeft, Pencil, Trash2, Users, User } from 'lucide-react'
+import { ArrowLeft, Pencil, Trash2, User } from 'lucide-react'
 
 interface UserProfile {
   id: string
@@ -51,7 +51,7 @@ export function UserProfileView({ user, currentUserId, currentUserRole }: UserPr
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push(isAdmin ? '/users' : '/dashboard')}
             className="p-2 rounded-lg hover:bg-muted transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -73,16 +73,6 @@ export function UserProfileView({ user, currentUserId, currentUserRole }: UserPr
             <Pencil className="h-4 w-4 mr-1.5" />
             編集
           </Button>
-          {isOwnProfile && isAdmin && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push('/users')}
-            >
-              <Users className="h-4 w-4 mr-1.5" />
-              ユーザ管理
-            </Button>
-          )}
           {!isOwnProfile && isAdmin && (
             <Button variant="destructive" size="sm" onClick={handleDelete}>
               <Trash2 className="h-4 w-4 mr-1.5" />

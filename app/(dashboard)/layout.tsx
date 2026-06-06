@@ -29,7 +29,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
         {/* User info / logout */}
         <div className="border-t px-3 py-2 flex items-center justify-between text-xs text-muted-foreground">
           <Link
-            href={`/users/${(session.user as { id?: string }).id}`}
+            href={
+              (session.user as { role?: string }).role === 'ADMIN'
+                ? '/users'
+                : `/users/${(session.user as { id?: string }).id}`
+            }
             className="truncate hover:text-foreground hover:underline transition-colors"
           >
             {session.user?.name}
