@@ -90,6 +90,7 @@ export function ProfileEditForm({ recipient, mode }: ProfileEditFormProps) {
 
       const saved = await res.json()
       toast({ title: mode === 'create' ? '登録しました' : '更新しました' })
+      window.dispatchEvent(new CustomEvent('careRecipientsUpdated'))
       router.push(`/care-recipients/${saved.id}`)
       router.refresh()
     } catch {
