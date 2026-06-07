@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { HeartPulse } from 'lucide-react'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -15,6 +16,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [registered, setRegistered] = useState(false)
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('registered') === '1') {
+      setRegistered(true)
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -48,6 +56,11 @@ export default function LoginPage() {
           <CardDescription>アカウント情報を入力してください</CardDescription>
         </CardHeader>
         <CardContent>
+          {registered && (
+            <p className="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-md mb-4">
+              アカウント登録が完了しました。ログインしてください。
+            </p>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">メールアドレス</Label>
@@ -79,6 +92,17 @@ export default function LoginPage() {
               {loading ? 'ログイン中...' : 'ログイン'}
             </Button>
           </form>
+          <div className="mt-6 pt-4 border-t space-y-2 text-center text-sm">
+            <p className="text-muted-foreground">アカウントをお持ちでない方</p>
+            <div className="flex flex-col gap-1.5">
+              <Link href="/register/account" className="text-blue-600 hover:underline">
+                アカウント新規登録
+              </Link>
+              <Link href="/register/business" className="text-blue-600 hover:underline">
+                事業者登録
+              </Link>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

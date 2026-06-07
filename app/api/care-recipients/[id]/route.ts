@@ -23,8 +23,10 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
 
+  const businessId = (session.user as { businessId?: string }).businessId
+
   const recipient = await prisma.careRecipient.findFirst({
-    where: { id: params.id, deletedAt: null },
+    where: { id: params.id, deletedAt: null, businessId },
     include: {
       medicalConditions: { orderBy: { createdAt: 'asc' } },
       allergies: { orderBy: { createdAt: 'asc' } },
@@ -70,9 +72,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const { expectedUpdatedAt, medicalConditions, allergies, birthDate, ...data } = parsed.data
 
+  const businessId = (session.user as { businessId?: string }).businessId
+
   // 削除・競合チェック
-  const current = await prisma.careRecipient.findUnique({
-    where: { id: params.id },
+  const current = await prisma.careRecipient.findFirst({
+    where: { id: params.id, businessId },
     select: { deletedAt: true, updatedAt: true },
   })
 
@@ -122,6 +126,15 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   if (!session) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
   if ((session.user as { role?: string }).role !== 'ADMIN') {
     return NextResponse.json({ error: '管理者権限が必要です' }, { status: 403 })
+  }
+
+  const businessId = (session.user as { businessId?: string }).businessId
+  const target = await prisma.careRecipient.findFirst({
+    where: { id: params.id, businessId },
+    select: { id: true },
+  })
+  if (!target) {
+    return NextResponse.json({ error: '対象者が見つかりません' }, { status: 404 })
   }
 
   await prisma.careRecipient.update({

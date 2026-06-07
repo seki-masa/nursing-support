@@ -12,11 +12,11 @@ export default async function EditUserPage({ params }: Props) {
   const session = await getServerSession(authOptions)
   if (!session) redirect('/login')
 
-  const me = session.user as { id?: string; role?: string }
+  const me = session.user as { id?: string; role?: string; businessId?: string }
   if (me.id !== params.id && me.role !== 'ADMIN') redirect('/dashboard')
 
-  const user = await prisma.user.findUnique({
-    where: { id: params.id },
+  const user = await prisma.user.findFirst({
+    where: { id: params.id, businessId: me.businessId },
     select: { id: true, name: true, email: true, role: true },
   })
 

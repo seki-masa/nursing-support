@@ -19,7 +19,10 @@ export async function GET() {
     return NextResponse.json({ error: '管理者権限が必要です' }, { status: 403 })
   }
 
+  const businessId = (session.user as { businessId?: string }).businessId
+
   const users = await prisma.user.findMany({
+    where: { businessId },
     select: { id: true, name: true, email: true, role: true, createdAt: true },
     orderBy: { createdAt: 'asc' },
   })
@@ -45,9 +48,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ code: 'EMAIL_CONFLICT', error: 'このメールアドレスは既に使用されています' }, { status: 409 })
   }
 
+  const businessId = (session.user as { businessId?: string }).businessId
+  if (!businessId) return NextResponse.json({ error: '事業者が特定できません' }, { status: 400 })
+
   const passwordHash = await bcrypt.hash(parsed.data.password, 10)
   const user = await prisma.user.create({
-    data: { name: parsed.data.name, email: parsed.data.email, passwordHash, role: parsed.data.role },
+    data: { name: parsed.data.name, email: parsed.data.email, passwordHash, role: parsed.data.role, businessId },
     select: { id: true, name: true, email: true, role: true, createdAt: true },
   })
 

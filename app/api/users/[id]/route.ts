@@ -16,7 +16,14 @@ const updateSchema = z.object({
 type Params = { params: { id: string } }
 
 function getSessionUser(session: Awaited<ReturnType<typeof getServerSession>>) {
-  return session?.user as { id?: string; role?: string } | undefined
+  return session?.user as { id?: string; role?: string; businessId?: string } | undefined
+}
+
+// 対象ユーザがセッションと同じ事業者に属するか確認
+async function isSameBusiness(targetId: string, businessId?: string) {
+  if (!businessId) return false
+  const target = await prisma.user.findUnique({ where: { id: targetId }, select: { businessId: true } })
+  return !!target && target.businessId === businessId
 }
 
 export async function GET(_req: NextRequest, { params }: Params) {
@@ -26,6 +33,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const me = getSessionUser(session)
   if (me?.id !== params.id && me?.role !== 'ADMIN') {
     return NextResponse.json({ error: 'アクセス権限がありません' }, { status: 403 })
+  }
+  if (!(await isSameBusiness(params.id, me?.businessId))) {
+    return NextResponse.json({ error: 'ユーザが見つかりません' }, { status: 404 })
   }
 
   const user = await prisma.user.findUnique({
@@ -45,6 +55,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const me = getSessionUser(session)
   if (me?.id !== params.id && me?.role !== 'ADMIN') {
     return NextResponse.json({ error: 'アクセス権限がありません' }, { status: 403 })
+  }
+  if (!(await isSameBusiness(params.id, me?.businessId))) {
+    return NextResponse.json({ error: 'ユーザが見つかりません' }, { status: 404 })
   }
 
   const body = await req.json()
@@ -99,6 +112,9 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   }
   if (me?.id === params.id) {
     return NextResponse.json({ error: '自分自身は削除できません' }, { status: 400 })
+  }
+  if (!(await isSameBusiness(params.id, me?.businessId))) {
+    return NextResponse.json({ error: 'ユーザが見つかりません' }, { status: 404 })
   }
 
   await prisma.user.delete({ where: { id: params.id } })

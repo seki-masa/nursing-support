@@ -12,8 +12,10 @@ export default async function ProfilePage({ params }: Props) {
   const session = await getServerSession(authOptions)
   if (!session) return null
 
+  const businessId = (session.user as { businessId?: string }).businessId
+
   const recipient = await prisma.careRecipient.findFirst({
-    where: { id: params.id, deletedAt: null },
+    where: { id: params.id, deletedAt: null, businessId },
     include: {
       medicalConditions: { orderBy: { createdAt: 'asc' } },
       allergies: { orderBy: { createdAt: 'asc' } },

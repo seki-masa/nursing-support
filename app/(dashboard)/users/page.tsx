@@ -9,7 +9,10 @@ export default async function UsersPage() {
   if (!session) redirect('/login')
   if ((session.user as { role?: string }).role !== 'ADMIN') redirect('/dashboard')
 
+  const businessId = (session.user as { businessId?: string }).businessId
+
   const users = await prisma.user.findMany({
+    where: { businessId },
     select: { id: true, name: true, email: true, role: true, createdAt: true },
     orderBy: { createdAt: 'asc' },
   })

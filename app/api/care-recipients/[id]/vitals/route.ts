@@ -35,9 +35,12 @@ export async function GET(req: NextRequest, { params }: Params) {
   const since = new Date()
   since.setDate(since.getDate() - days)
 
+  const businessId = (session.user as { businessId?: string }).businessId
+
   const vitals = await prisma.vital.findMany({
     where: {
       careRecipientId: params.id,
+      careRecipient: { businessId },
       recordedAt: { gte: since },
     },
     include: {
@@ -70,9 +73,11 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  // 削除チェック
-  const recipient = await prisma.careRecipient.findUnique({
-    where: { id: params.id },
+  const businessId = (session.user as { businessId?: string }).businessId
+
+  // 削除・所属チェック
+  const recipient = await prisma.careRecipient.findFirst({
+    where: { id: params.id, businessId },
     select: { deletedAt: true },
   })
   if (!recipient || recipient.deletedAt !== null) {
