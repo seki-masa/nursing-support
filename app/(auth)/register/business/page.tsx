@@ -95,15 +95,15 @@ export default function BusinessRegisterPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="companyName">会社名</Label>
-                <Input id="companyName" value={form.companyName} onChange={update('companyName')} required />
+                <Input id="companyName" placeholder="〇〇介護サービス株式会社" value={form.companyName} onChange={update('companyName')} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="address">会社住所</Label>
-                <Input id="address" value={form.address} onChange={update('address')} required />
+                <Input id="address" placeholder="東京都千代田区1-1-1" value={form.address} onChange={update('address')} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="contactName">担当者名</Label>
-                <Input id="contactName" value={form.contactName} onChange={update('contactName')} required />
+                <Input id="contactName" placeholder="山田 太郎" value={form.contactName} onChange={update('contactName')} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">電話番号</Label>
@@ -126,7 +126,7 @@ export default function BusinessRegisterPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">メールアドレス</Label>
-                <Input id="email" type="email" value={form.email} onChange={update('email')} required autoComplete="email" />
+                <Input id="email" type="email" placeholder="example@mail.com" value={form.email} onChange={update('email')} required autoComplete="email" />
               </div>
               {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md">{error}</p>}
               <Button type="submit" className="w-full" disabled={loading}>
