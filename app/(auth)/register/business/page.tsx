@@ -17,14 +17,30 @@ export default function BusinessRegisterPage() {
     email: '',
   })
   const [error, setError] = useState('')
+  const [phoneError, setPhoneError] = useState('')
   const [loading, setLoading] = useState(false)
   const [issuedCode, setIssuedCode] = useState<string | null>(null)
 
   const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [key]: e.target.value }))
 
+  // 電話番号: 半角数字とハイフンのみ、ハイフンを除いて0始まり10〜11桁
+  const validatePhone = (value: string): string => {
+    if (!value) return '電話番号を入力してください'
+    if (!/^[0-9-]+$/.test(value)) return '半角数字とハイフンのみで入力してください'
+    if (!/^0\d{9,10}$/.test(value.replace(/-/g, ''))) {
+      return '正しい電話番号を入力してください（市外局番から数字10〜11桁）'
+    }
+    return ''
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const phoneMsg = validatePhone(form.phone)
+    setPhoneError(phoneMsg)
+    if (phoneMsg) return
+
     setLoading(true)
     setError('')
 
@@ -91,7 +107,22 @@ export default function BusinessRegisterPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">電話番号</Label>
-                <Input id="phone" value={form.phone} onChange={update('phone')} required />
+                <Input
+                  id="phone"
+                  type="tel"
+                  inputMode="tel"
+                  maxLength={13}
+                  placeholder="03-1234-5678"
+                  value={form.phone}
+                  onChange={(e) => {
+                    update('phone')(e)
+                    if (phoneError) setPhoneError(validatePhone(e.target.value))
+                  }}
+                  onBlur={(e) => setPhoneError(validatePhone(e.target.value))}
+                  aria-invalid={!!phoneError}
+                  required
+                />
+                {phoneError && <p className="text-sm text-red-600">{phoneError}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">メールアドレス</Label>
