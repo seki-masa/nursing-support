@@ -68,6 +68,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const { password, currentPassword, role, email, ...rest } = parsed.data
 
+  // パスワード変更は本人のみ可能（管理者でも他ユーザのパスワードは変更不可）
+  if (password && me?.id !== params.id) {
+    return NextResponse.json({ error: '他のユーザのパスワードは変更できません' }, { status: 403 })
+  }
+
   if (email) {
     const existing = await prisma.user.findFirst({ where: { email, NOT: { id: params.id } } })
     if (existing) {

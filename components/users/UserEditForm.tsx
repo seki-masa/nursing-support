@@ -198,39 +198,41 @@ export function UserEditForm({ user, mode, currentUserRole, currentUserId }: Use
         </CardContent>
       </Card>
 
-      {/* Password */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">
-            {mode === 'create' ? 'パスワード設定' : 'パスワード変更'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {mode === 'edit' && isOwnProfile && (
+      {/* Password（新規作成時、または自分自身の編集時のみ。他ユーザのパスワード変更は不可） */}
+      {(mode === 'create' || isOwnProfile) && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">
+              {mode === 'create' ? 'パスワード設定' : 'パスワード変更'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {mode === 'edit' && isOwnProfile && (
+              <div className="space-y-1">
+                <Label htmlFor="currentPassword">現在のパスワード</Label>
+                <Input id="currentPassword" type="password" {...register('currentPassword')} placeholder="変更する場合は入力" />
+                {errors.currentPassword && <p className="text-xs text-destructive">{errors.currentPassword.message as string}</p>}
+              </div>
+            )}
+
             <div className="space-y-1">
-              <Label htmlFor="currentPassword">現在のパスワード</Label>
-              <Input id="currentPassword" type="password" {...register('currentPassword')} placeholder="変更する場合は入力" />
-              {errors.currentPassword && <p className="text-xs text-destructive">{errors.currentPassword.message as string}</p>}
+              <Label htmlFor="password">
+                {mode === 'create' ? '新しいパスワード *' : '新しいパスワード（変更する場合のみ入力）'}
+              </Label>
+              <Input id="password" type="password" {...register('password')} placeholder="6文字以上" />
+              {errors.password && <p className="text-xs text-destructive">{errors.password.message as string}</p>}
             </div>
-          )}
 
-          <div className="space-y-1">
-            <Label htmlFor="password">
-              {mode === 'create' ? '新しいパスワード *' : '新しいパスワード（変更する場合のみ入力）'}
-            </Label>
-            <Input id="password" type="password" {...register('password')} placeholder="6文字以上" />
-            {errors.password && <p className="text-xs text-destructive">{errors.password.message as string}</p>}
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="passwordConfirm">
-              {mode === 'create' ? 'パスワード（確認用） *' : 'パスワード（確認用）'}
-            </Label>
-            <Input id="passwordConfirm" type="password" {...register('passwordConfirm')} placeholder="同じパスワードを再入力" />
-            {errors.passwordConfirm && <p className="text-xs text-destructive">{errors.passwordConfirm.message as string}</p>}
-          </div>
-        </CardContent>
-      </Card>
+            <div className="space-y-1">
+              <Label htmlFor="passwordConfirm">
+                {mode === 'create' ? 'パスワード（確認用） *' : 'パスワード（確認用）'}
+              </Label>
+              <Input id="passwordConfirm" type="password" {...register('passwordConfirm')} placeholder="同じパスワードを再入力" />
+              {errors.passwordConfirm && <p className="text-xs text-destructive">{errors.passwordConfirm.message as string}</p>}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" onClick={() => router.back()}>
