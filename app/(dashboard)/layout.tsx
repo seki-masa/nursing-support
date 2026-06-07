@@ -2,14 +2,20 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { CareRecipientList } from '@/components/sidebar/CareRecipientList'
+import { prisma } from '@/lib/prisma'
 import { Suspense } from 'react'
-import { HeartPulse } from 'lucide-react'
+import { HeartPulse, Building2 } from 'lucide-react'
 import { SignOutButton } from '@/components/SignOutButton'
 import Link from 'next/link'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
   if (!session) redirect('/login')
+
+  const businessId = (session.user as { businessId?: string }).businessId
+  const business = businessId
+    ? await prisma.business.findUnique({ where: { id: businessId }, select: { id: true, companyName: true } })
+    : null
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -26,6 +32,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <CareRecipientList />
           </Suspense>
         </div>
+        {/* Company name */}
+        {business && (
+          <Link
+            href={`/businesses/${business.id}`}
+            className="border-t px-3 py-2 flex items-center gap-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+          >
+            <Building2 className="h-3.5 w-3.5 flex-shrink-0 text-blue-600" />
+            <span className="truncate">{business.companyName}</span>
+          </Link>
+        )}
         {/* User info / logout */}
         <div className="border-t px-3 py-2 flex items-center justify-between text-xs text-muted-foreground">
           <Link
