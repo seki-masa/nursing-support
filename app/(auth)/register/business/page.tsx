@@ -64,7 +64,7 @@ export default function BusinessRegisterPage() {
                 <p className="text-xs text-muted-foreground mb-1">事業者ID</p>
                 <p className="text-2xl font-bold tracking-wider text-blue-700">{issuedCode}</p>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground !mb-4">
                 この事業者IDをご入力のメールアドレスにも送信しました。<br />
                 この事業者IDを使ってアカウント新規登録を行ってください。
               </p>
