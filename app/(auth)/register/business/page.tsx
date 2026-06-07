@@ -17,29 +17,62 @@ export default function BusinessRegisterPage() {
     email: '',
   })
   const [error, setError] = useState('')
-  const [phoneError, setPhoneError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<keyof typeof form, string>>({
+    companyName: '',
+    address: '',
+    contactName: '',
+    phone: '',
+    email: '',
+  })
   const [loading, setLoading] = useState(false)
   const [issuedCode, setIssuedCode] = useState<string | null>(null)
 
-  const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm((prev) => ({ ...prev, [key]: e.target.value }))
+  const LABELS: Record<keyof typeof form, string> = {
+    companyName: '会社名',
+    address: '会社住所',
+    contactName: '担当者名',
+    phone: '電話番号',
+    email: 'メールアドレス',
+  }
 
-  // 電話番号: 半角数字とハイフンのみ、ハイフンを除いて0始まり10〜11桁
-  const validatePhone = (value: string): string => {
-    if (!value) return '電話番号を入力してください'
-    if (!/^[0-9-]+$/.test(value)) return '半角数字とハイフンのみで入力してください'
-    if (!/^0\d{9,10}$/.test(value.replace(/-/g, ''))) {
-      return '正しい電話番号を入力してください（市外局番から数字10〜11桁）'
+  // 各項目の入力チェック。問題なければ空文字を返す
+  const validateField = (key: keyof typeof form, value: string): string => {
+    const v = value.trim()
+    if (!v) return `${LABELS[key]}を入力してください`
+    if (key === 'phone') {
+      if (!/^[0-9-]+$/.test(v)) return '半角数字とハイフンのみで入力してください'
+      if (!/^0\d{9,10}$/.test(v.replace(/-/g, ''))) {
+        return '正しい電話番号を入力してください（市外局番から数字10〜11桁）'
+      }
+    }
+    if (key === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+      return '正しいメールアドレスを入力してください'
     }
     return ''
+  }
+
+  const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setForm((prev) => ({ ...prev, [key]: value }))
+    // 既にエラー表示中の項目は入力に追従して再検証
+    if (fieldErrors[key]) {
+      setFieldErrors((prev) => ({ ...prev, [key]: validateField(key, value) }))
+    }
+  }
+
+  const handleBlur = (key: keyof typeof form) => (e: React.FocusEvent<HTMLInputElement>) => {
+    setFieldErrors((prev) => ({ ...prev, [key]: validateField(key, e.target.value) }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const phoneMsg = validatePhone(form.phone)
-    setPhoneError(phoneMsg)
-    if (phoneMsg) return
+    const nextErrors = (Object.keys(form) as (keyof typeof form)[]).reduce(
+      (acc, key) => ({ ...acc, [key]: validateField(key, form[key]) }),
+      {} as Record<keyof typeof form, string>,
+    )
+    setFieldErrors(nextErrors)
+    if (Object.values(nextErrors).some(Boolean)) return
 
     setLoading(true)
     setError('')
@@ -92,18 +125,45 @@ export default function BusinessRegisterPage() {
               </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <div className="space-y-2">
                 <Label htmlFor="companyName">会社名</Label>
-                <Input id="companyName" placeholder="〇〇介護サービス株式会社" value={form.companyName} onChange={update('companyName')} required />
+                <Input
+                  id="companyName"
+                  placeholder="〇〇介護サービス株式会社"
+                  value={form.companyName}
+                  onChange={update('companyName')}
+                  onBlur={handleBlur('companyName')}
+                  aria-invalid={!!fieldErrors.companyName}
+                  required
+                />
+                {fieldErrors.companyName && <p className="text-sm text-red-600">{fieldErrors.companyName}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="address">会社住所</Label>
-                <Input id="address" placeholder="東京都千代田区1-1-1" value={form.address} onChange={update('address')} required />
+                <Input
+                  id="address"
+                  placeholder="東京都千代田区1-1-1"
+                  value={form.address}
+                  onChange={update('address')}
+                  onBlur={handleBlur('address')}
+                  aria-invalid={!!fieldErrors.address}
+                  required
+                />
+                {fieldErrors.address && <p className="text-sm text-red-600">{fieldErrors.address}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="contactName">担当者名</Label>
-                <Input id="contactName" placeholder="山田 太郎" value={form.contactName} onChange={update('contactName')} required />
+                <Input
+                  id="contactName"
+                  placeholder="山田 太郎"
+                  value={form.contactName}
+                  onChange={update('contactName')}
+                  onBlur={handleBlur('contactName')}
+                  aria-invalid={!!fieldErrors.contactName}
+                  required
+                />
+                {fieldErrors.contactName && <p className="text-sm text-red-600">{fieldErrors.contactName}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">電話番号</Label>
@@ -114,19 +174,27 @@ export default function BusinessRegisterPage() {
                   maxLength={13}
                   placeholder="03-1234-5678"
                   value={form.phone}
-                  onChange={(e) => {
-                    update('phone')(e)
-                    if (phoneError) setPhoneError(validatePhone(e.target.value))
-                  }}
-                  onBlur={(e) => setPhoneError(validatePhone(e.target.value))}
-                  aria-invalid={!!phoneError}
+                  onChange={update('phone')}
+                  onBlur={handleBlur('phone')}
+                  aria-invalid={!!fieldErrors.phone}
                   required
                 />
-                {phoneError && <p className="text-sm text-red-600">{phoneError}</p>}
+                {fieldErrors.phone && <p className="text-sm text-red-600">{fieldErrors.phone}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">メールアドレス</Label>
-                <Input id="email" type="email" placeholder="example@mail.com" value={form.email} onChange={update('email')} required autoComplete="email" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="example@mail.com"
+                  value={form.email}
+                  onChange={update('email')}
+                  onBlur={handleBlur('email')}
+                  aria-invalid={!!fieldErrors.email}
+                  autoComplete="email"
+                  required
+                />
+                {fieldErrors.email && <p className="text-sm text-red-600">{fieldErrors.email}</p>}
               </div>
               {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md">{error}</p>}
               <Button type="submit" className="w-full" disabled={loading}>
