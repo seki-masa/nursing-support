@@ -34,7 +34,6 @@ export default async function BusinessDetailPage({ params }: Props) {
           </Link>
           <div>
             <h1 className="text-2xl font-bold">{business.companyName}</h1>
-            <p className="text-sm text-muted-foreground">事業者ID: {business.code}</p>
           </div>
         </div>
         {isAdmin && (
