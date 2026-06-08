@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { toast } from '@/components/ui/use-toast'
 import { VITAL_RANGES } from '@/lib/vitals-utils'
+import type { VitalRecord } from '@/types'
 import { ArrowLeft, Bluetooth, AlertTriangle } from 'lucide-react'
 
 const END_STATUSES = ['DECEASED', 'DISCHARGED'] as const
@@ -53,6 +54,9 @@ type FormData = z.infer<typeof schema>
 interface VitalInputFormProps {
   careRecipientId: string
   recipientName: string
+  mode?: 'create' | 'edit'
+  vitalId?: string
+  initialVital?: VitalRecord
 }
 
 function parseOptionalInt(val: string | undefined): number | null {
@@ -67,21 +71,51 @@ function parseOptionalFloat(val: string | undefined): number | null {
   return isNaN(n) ? null : n
 }
 
-export function VitalInputForm({ careRecipientId, recipientName }: VitalInputFormProps) {
+// 編集時：既存バイタルをフォーム初期値（文字列ベース）へ変換
+function vitalToFormData(v: VitalRecord): FormData {
+  const s = (n: number | null | undefined) => (n != null ? String(n) : '')
+  return {
+    recordedAt: format(new Date(v.recordedAt), "yyyy-MM-dd'T'HH:mm"),
+    status: (v.status ?? 'UNSET') as FormData['status'],
+    systolicBp: s(v.systolicBp),
+    diastolicBp: s(v.diastolicBp),
+    heartRate: s(v.heartRate),
+    respiratoryRate: s(v.respiratoryRate),
+    temperature: s(v.temperature),
+    spo2: s(v.spo2),
+    weight: s(v.weight),
+    bloodSugar: s(v.bloodSugar),
+    consciousnessLevel: s(v.consciousnessLevel),
+    painScore: s(v.painScore),
+    edema: (v.edema ?? 'UNSET') as FormData['edema'],
+    urineOutput: s(v.urineOutput),
+    notes: v.notes ?? '',
+  }
+}
+
+export function VitalInputForm({ careRecipientId, recipientName, mode = 'create', vitalId, initialVital }: VitalInputFormProps) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
-
-  // 死亡・退院確認ダイアログ
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-  const [pendingStatus, setPendingStatus] = useState<'DECEASED' | 'DISCHARGED' | null>(null)
-  const [confirmDateTime, setConfirmDateTime] = useState('')
-  const [confirmedEventAt, setConfirmedEventAt] = useState<{ DECEASED?: string; DISCHARGED?: string }>({})
+  const isEdit = mode === 'edit' && !!initialVital
 
   const now = format(new Date(), "yyyy-MM-dd'T'HH:mm")
 
+  // 死亡・退院確認ダイアログ。編集時は既存の死亡/退院日時を復元
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [pendingStatus, setPendingStatus] = useState<'DECEASED' | 'DISCHARGED' | null>(null)
+  const [confirmDateTime, setConfirmDateTime] = useState('')
+  const [confirmedEventAt, setConfirmedEventAt] = useState<{ DECEASED?: string; DISCHARGED?: string }>(
+    isEdit
+      ? {
+          DECEASED: initialVital!.deceasedAt ? format(new Date(initialVital!.deceasedAt), "yyyy-MM-dd'T'HH:mm") : undefined,
+          DISCHARGED: initialVital!.dischargedAt ? format(new Date(initialVital!.dischargedAt), "yyyy-MM-dd'T'HH:mm") : undefined,
+        }
+      : {}
+  )
+
   const { register, control, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { recordedAt: now, status: 'UNSET', edema: 'UNSET' },
+    defaultValues: isEdit ? vitalToFormData(initialVital!) : { recordedAt: now, status: 'UNSET', edema: 'UNSET' },
   })
 
   const watchedStatus = watch('status')
@@ -132,8 +166,11 @@ export function VitalInputForm({ careRecipientId, recipientName }: VitalInputFor
         notes: data.notes || null,
       }
 
-      const res = await fetch(`/api/care-recipients/${careRecipientId}/vitals`, {
-        method: 'POST',
+      const url = isEdit
+        ? `/api/care-recipients/${careRecipientId}/vitals/${vitalId}`
+        : `/api/care-recipients/${careRecipientId}/vitals`
+      const res = await fetch(url, {
+        method: isEdit ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
@@ -144,13 +181,18 @@ export function VitalInputForm({ careRecipientId, recipientName }: VitalInputFor
         router.push('/dashboard')
         return
       }
+      if (res.status === 403) {
+        toast({ title: '最新のバイタルのみ編集できます', variant: 'destructive' })
+        router.push(`/dashboard?id=${careRecipientId}`)
+        return
+      }
       if (!res.ok) throw new Error()
-      toast({ title: 'バイタルを記録しました' })
+      toast({ title: isEdit ? 'バイタルを更新しました' : 'バイタルを記録しました' })
       window.dispatchEvent(new CustomEvent('careRecipientsUpdated'))
       router.push(`/dashboard?id=${careRecipientId}`)
       router.refresh()
     } catch {
-      toast({ title: '記録に失敗しました', variant: 'destructive' })
+      toast({ title: isEdit ? '更新に失敗しました' : '記録に失敗しました', variant: 'destructive' })
     } finally {
       setSaving(false)
     }
@@ -178,7 +220,7 @@ export function VitalInputForm({ careRecipientId, recipientName }: VitalInputFor
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div>
-            <h1 className="text-xl font-bold">バイタル入力</h1>
+            <h1 className="text-xl font-bold">{isEdit ? 'バイタル編集' : 'バイタル入力'}</h1>
             <p className="text-sm text-muted-foreground">{recipientName} 様</p>
           </div>
         </div>
@@ -391,7 +433,7 @@ export function VitalInputForm({ careRecipientId, recipientName }: VitalInputFor
             キャンセル
           </Button>
           <Button type="submit" disabled={saving}>
-            {saving ? '保存中...' : '記録する'}
+            {saving ? '保存中...' : isEdit ? '更新する' : '記録する'}
           </Button>
         </div>
       </form>

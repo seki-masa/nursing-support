@@ -20,6 +20,7 @@ import {
   Plus,
   Clock,
   Bluetooth,
+  Pencil,
 } from 'lucide-react'
 
 interface Props {
@@ -172,6 +173,18 @@ export function VitalDashboard({ careRecipientId }: Props) {
               — {format(new Date(latest.recordedAt), 'yyyy年M月d日 HH:mm', { locale: ja })}
               　記録者: {latest.recorder.name}
             </span>
+          )}
+          {latest && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto h-7 px-2 text-xs"
+              onClick={() => router.push(`/care-recipients/${recipient.id}/vitals/${latest.id}/edit`)}
+              title="最新バイタルを編集"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              編集
+            </Button>
           )}
         </h2>
 
