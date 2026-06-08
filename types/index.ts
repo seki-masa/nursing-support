@@ -90,6 +90,17 @@ export const STATUS_CONFIG: Record<
   DISCHARGED:  { label: '退院',     badgeClass: 'bg-gray-400 text-white',    textClass: 'text-gray-400',   dotClass: 'bg-gray-400' },
 }
 
+// ステータスの危険度レベル（0=最も安全 〜 6=最も危険）。グラフ表示用
+export const STATUS_LEVEL: Record<CareStatus, number> = {
+  DISCHARGED: 0,
+  HEALTHY: 1,
+  OBSERVATION: 2,
+  CAUTION: 3,
+  SEVERE: 4,
+  CRITICAL: 5,
+  DECEASED: 6,
+}
+
 export const GENDER_LABELS: Record<Gender, string> = {
   MALE: '男性',
   FEMALE: '女性',

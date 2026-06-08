@@ -42,6 +42,14 @@ export const EDEMA_LABELS: Record<string, string> = {
   SEVERE: '+++',
 }
 
+// 浮腫の重症度レベル（0=なし 〜 3=高度）。グラフ表示用
+export const EDEMA_LEVEL: Record<string, number> = {
+  NONE: 0,
+  MILD: 1,
+  MODERATE: 2,
+  SEVERE: 3,
+}
+
 export const JCS_LABELS: Record<number, string> = {
   0: '清明',
   1: '呼びかけると開眼',
