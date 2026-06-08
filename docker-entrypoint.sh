@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-echo "==> データベーススキーマを適用中..."
-npx prisma db push --accept-data-loss
+echo "==> データベースマイグレーションを適用中..."
+npx prisma migrate deploy
 
 echo "==> 初期データを確認・投入中..."
 npx tsx prisma/seed.ts
