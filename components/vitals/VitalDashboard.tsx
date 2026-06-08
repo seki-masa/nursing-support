@@ -82,6 +82,18 @@ export function VitalDashboard({ careRecipientId }: Props) {
                 </span>
               </>
             )}
+            {recipient.status === 'DECEASED' && recipient.deceasedAt && (
+              <>
+                <span>•</span>
+                <span className="whitespace-nowrap">死亡時刻: {format(new Date(recipient.deceasedAt), 'M月d日 HH:mm', { locale: ja })}</span>
+              </>
+            )}
+            {recipient.status === 'DISCHARGED' && recipient.dischargedAt && (
+              <>
+                <span>•</span>
+                <span className="whitespace-nowrap">退院時刻: {format(new Date(recipient.dischargedAt), 'M月d日 HH:mm', { locale: ja })}</span>
+              </>
+            )}
           </div>
         </div>
         <div className="flex gap-2 flex-shrink-0">
