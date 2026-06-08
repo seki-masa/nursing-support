@@ -1,5 +1,9 @@
 import nodemailer from 'nodemailer'
 
+const DEFAULT_SUPPORT_EMAIL = 'system.info.support@gmail.com'
+const FROM_ADDRESS = process.env.SMTP_FROM ?? DEFAULT_SUPPORT_EMAIL
+const SUPPORT_ADDRESS = process.env.SUPPORT_EMAIL ?? DEFAULT_SUPPORT_EMAIL
+
 interface BusinessIdEmailParams {
   to: string
   code: string
@@ -21,7 +25,7 @@ function buildMessage({ to, code, companyName }: BusinessIdEmailParams) {
     '------------------------------',
     '介護支援バイタル管理システム',
   ].join('\n')
-  return { subject, text, from: process.env.SMTP_FROM ?? 'no-reply@nursing-support.local', to }
+  return { subject, text, from: FROM_ADDRESS, to }
 }
 
 export async function sendBusinessIdEmail(params: BusinessIdEmailParams): Promise<void> {
@@ -51,8 +55,36 @@ export async function sendPasswordResetEmail({ to, name, url }: PasswordResetEma
     '------------------------------',
     '介護支援バイタル管理システム',
   ].join('\n')
-  const from = process.env.SMTP_FROM ?? 'no-reply@nursing-support.local'
-  await deliver({ subject, text, from, to })
+  await deliver({ subject, text, from: FROM_ADDRESS, to })
+}
+
+interface ContactEmailParams {
+  userName: string
+  userEmail: string
+  subject: string
+  message: string
+}
+
+export async function sendContactEmail({ userName, userEmail, subject, message }: ContactEmailParams): Promise<void> {
+  const mailSubject = `【お問い合わせ】${subject}`
+  const text = [
+    'システム管理者へのお問い合わせを受け付けました。',
+    '',
+    `送信者: ${userName}`,
+    `メールアドレス: ${userEmail}`,
+    `件名: ${subject}`,
+    '',
+    '--- お問い合わせ内容 ---',
+    message,
+    '------------------------',
+    '',
+    '※ このメールは送信者ご本人とシステム管理者宛に送信されています。',
+    '',
+    '------------------------------',
+    '介護支援バイタル管理システム',
+  ].join('\n')
+  // 管理者宛に送信し、本人にも控えを送る（返信は本人へ届くよう replyTo を設定）
+  await deliver({ subject: mailSubject, text, from: FROM_ADDRESS, to: SUPPORT_ADDRESS, cc: userEmail, replyTo: userEmail })
 }
 
 interface Message {
@@ -60,6 +92,8 @@ interface Message {
   text: string
   from: string
   to: string
+  cc?: string
+  replyTo?: string
 }
 
 async function deliver(message: Message): Promise<void> {
@@ -67,6 +101,7 @@ async function deliver(message: Message): Promise<void> {
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
     console.log('📧 [メール送信(ログ出力)] SMTP未設定のため実送信はスキップしました')
     console.log(`  宛先: ${message.to}`)
+    if (message.cc) console.log(`  CC: ${message.cc}`)
     console.log(`  件名: ${message.subject}`)
     console.log('  本文:')
     console.log(message.text)

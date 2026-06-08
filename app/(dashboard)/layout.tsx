@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { Suspense } from 'react'
 import { HeartPulse, Building2 } from 'lucide-react'
 import { SignOutButton } from '@/components/SignOutButton'
+import { ContactButton } from '@/components/ContactButton'
 import Link from 'next/link'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -54,7 +55,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
           >
             {session.user?.name}
           </Link>
-          <SignOutButton />
+          <div className="flex items-center gap-1">
+            <ContactButton />
+            <SignOutButton />
+          </div>
         </div>
       </aside>
 
