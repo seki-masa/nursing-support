@@ -245,7 +245,7 @@ export function VitalInputForm({ careRecipientId, recipientName }: VitalInputFor
               </div>
             )}
             {watchedStatus === 'DISCHARGED' && confirmedEventAt.DISCHARGED && (
-              <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 rounded px-3 py-2">
+              <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded px-3 py-2">
                 <span className="font-medium whitespace-nowrap shrink-0">退院日時:</span>
                 <Input
                   type="datetime-local"
