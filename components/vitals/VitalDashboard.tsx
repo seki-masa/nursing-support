@@ -219,12 +219,16 @@ export function VitalDashboard({ careRecipientId }: Props) {
               <VitalCard field="bloodSugar" value={latest.bloodSugar} />
             )}
             {latest.painScore != null && (
-              <VitalCard field="painScore" value={latest.painScore} />
+              <div className="rounded-xl border bg-white p-4 flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground font-medium">疼痛スコア</span>
+                <span className="text-2xl font-bold">{latest.painScore}</span>
+                <span className="text-xs text-muted-foreground">NRS</span>
+              </div>
             )}
             {latest.edema != null && latest.edema !== 'NONE' && (
-              <div className="rounded-xl border bg-blue-50 border-blue-200 p-4 flex flex-col gap-1">
+              <div className="rounded-xl border bg-white p-4 flex flex-col gap-1">
                 <span className="text-xs text-muted-foreground font-medium">浮腫</span>
-                <span className="text-2xl font-bold text-blue-600">{EDEMA_LABELS[latest.edema]}</span>
+                <span className="text-2xl font-bold">{EDEMA_LABELS[latest.edema]}</span>
               </div>
             )}
             {latest.notes && (
