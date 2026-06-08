@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { getServerSession, type Session } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
@@ -15,7 +15,7 @@ const updateSchema = z.object({
 
 type Params = { params: { id: string } }
 
-function getSessionUser(session: Awaited<ReturnType<typeof getServerSession>>) {
+function getSessionUser(session: Session | null) {
   return session?.user as { id?: string; role?: string; businessId?: string } | undefined
 }
 
