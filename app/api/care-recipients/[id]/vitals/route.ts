@@ -31,9 +31,17 @@ export async function GET(req: NextRequest, { params }: Params) {
   if (!session) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
 
   const { searchParams } = new URL(req.url)
-  const days = parseInt(searchParams.get('days') ?? '30')
-  const since = new Date()
-  since.setDate(since.getDate() - days)
+  const daysParam = searchParams.get('days') ?? '30'
+  // 'all' または不正値は全期間（日付フィルタなし）。数値指定時のみ期間で絞り込む
+  let recordedAtFilter: { gte: Date } | undefined
+  if (daysParam !== 'all') {
+    const days = parseInt(daysParam)
+    if (!Number.isNaN(days) && days > 0) {
+      const since = new Date()
+      since.setDate(since.getDate() - days)
+      recordedAtFilter = { gte: since }
+    }
+  }
 
   const businessId = (session.user as { businessId?: string }).businessId
 
@@ -41,13 +49,13 @@ export async function GET(req: NextRequest, { params }: Params) {
     where: {
       careRecipientId: params.id,
       careRecipient: { businessId },
-      recordedAt: { gte: since },
+      recordedAt: recordedAtFilter,
     },
     include: {
       recorder: { select: { id: true, name: true } },
     },
     orderBy: { recordedAt: 'desc' },
-    take: 100,
+    take: 500,
   })
 
   return NextResponse.json(
