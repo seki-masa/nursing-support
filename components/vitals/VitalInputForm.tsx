@@ -235,7 +235,7 @@ export function VitalInputForm({ careRecipientId, recipientName }: VitalInputFor
             {/* 死亡・退院日時の確認表示 */}
             {watchedStatus === 'DECEASED' && confirmedEventAt.DECEASED && (
               <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded px-3 py-2">
-                <span className="font-medium">死亡日時:</span>
+                <span className="font-medium whitespace-nowrap shrink-0">死亡日時:</span>
                 <Input
                   type="datetime-local"
                   value={confirmedEventAt.DECEASED}
@@ -246,7 +246,7 @@ export function VitalInputForm({ careRecipientId, recipientName }: VitalInputFor
             )}
             {watchedStatus === 'DISCHARGED' && confirmedEventAt.DISCHARGED && (
               <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 rounded px-3 py-2">
-                <span className="font-medium">退院日時:</span>
+                <span className="font-medium whitespace-nowrap shrink-0">退院日時:</span>
                 <Input
                   type="datetime-local"
                   value={confirmedEventAt.DISCHARGED}
