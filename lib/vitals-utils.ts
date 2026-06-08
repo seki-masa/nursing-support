@@ -13,7 +13,7 @@ export const VITAL_RANGES: Record<string, VitalRange> = {
   temperature:       { min: 36.0, max: 37.4, unit: '℃',    label: '体温' },
   spo2:              { min: 96,   max: 100,  unit: '%',    label: 'SpO2' },
   bloodSugar:        { min: 70,   max: 140,  unit: 'mg/dL', label: '血糖値' },
-  painScore:         { min: 0,    max: 3,    unit: '',     label: '疼痛スコア' },
+  painScore:         { min: 0,    max: 10,   unit: '',     label: '疼痛スコア' },
 }
 
 export type AbnormalLevel = 'normal' | 'warning' | 'danger'

@@ -71,6 +71,21 @@ function parseOptionalFloat(val: string | undefined): number | null {
   return isNaN(n) ? null : n
 }
 
+// API側の許容範囲（サーバ400時に範囲外項目をユーザへ表示するため）
+const INPUT_RANGES: Record<string, { label: string; min: number; max: number; unit?: string }> = {
+  systolicBp:         { label: '収縮期血圧',   min: 40, max: 300, unit: 'mmHg' },
+  diastolicBp:        { label: '拡張期血圧',   min: 20, max: 200, unit: 'mmHg' },
+  heartRate:          { label: '心拍数',       min: 20, max: 300, unit: 'bpm' },
+  respiratoryRate:    { label: '呼吸数',       min: 0,  max: 60,  unit: '回/分' },
+  temperature:        { label: '体温',         min: 30, max: 45,  unit: '℃' },
+  spo2:               { label: 'SpO2',         min: 50, max: 100, unit: '%' },
+  weight:             { label: '体重',         min: 1,  max: 300, unit: 'kg' },
+  bloodSugar:         { label: '血糖値',       min: 20, max: 600, unit: 'mg/dL' },
+  consciousnessLevel: { label: '意識レベル',   min: 0,  max: 300 },
+  painScore:          { label: '疼痛スコア',   min: 0,  max: 10 },
+  urineOutput:        { label: '尿量',         min: 0,  max: 5000, unit: 'mL/日' },
+}
+
 // 編集時：既存バイタルをフォーム初期値（文字列ベース）へ変換
 function vitalToFormData(v: VitalRecord): FormData {
   const s = (n: number | null | undefined) => (n != null ? String(n) : '')
@@ -113,7 +128,7 @@ export function VitalInputForm({ careRecipientId, recipientName, mode = 'create'
       : {}
   )
 
-  const { register, control, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
+  const { register, control, handleSubmit, setValue, setError, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: isEdit ? vitalToFormData(initialVital!) : { recordedAt: now, status: 'UNSET', edema: 'UNSET' },
   })
@@ -184,6 +199,29 @@ export function VitalInputForm({ careRecipientId, recipientName, mode = 'create'
       if (res.status === 403) {
         toast({ title: '最新のバイタルのみ編集できます', variant: 'destructive' })
         router.push(`/dashboard?id=${careRecipientId}`)
+        return
+      }
+      if (res.status === 400) {
+        // サーバの範囲バリデーション失敗。該当項目を各入力欄とトーストに表示
+        const errData = await res.json().catch(() => null)
+        const fieldErrors: Record<string, string[]> = errData?.error?.fieldErrors ?? {}
+        const labels: string[] = []
+        for (const field of Object.keys(fieldErrors)) {
+          const r = INPUT_RANGES[field]
+          if (r) {
+            setError(field as keyof FormData, {
+              message: `${r.min}〜${r.max}${r.unit ? ` ${r.unit}` : ''} の範囲で入力してください`,
+            })
+            labels.push(r.label)
+          } else {
+            labels.push(field)
+          }
+        }
+        toast({
+          title: '入力値を確認してください',
+          description: labels.length ? `範囲外の項目: ${labels.join('、')}` : '入力内容を確認してください',
+          variant: 'destructive',
+        })
         return
       }
       if (!res.ok) throw new Error()
@@ -391,11 +429,14 @@ export function VitalInputForm({ careRecipientId, recipientName, mode = 'create'
             <div className="space-y-1">
               <Label>意識レベル (JCS)</Label>
               <Input type="number" {...register('consciousnessLevel')} placeholder="例: 0 (清明)" />
+              {errors.consciousnessLevel && <p className="text-xs text-destructive">{errors.consciousnessLevel.message}</p>}
             </div>
             <div className="space-y-1">
               <Label>疼痛スコア (NRS 0-10)</Label>
               <Input type="number" min="0" max="10" {...register('painScore')} placeholder="例: 2" />
-              <p className="text-xs text-muted-foreground">{rangeHint('painScore')}</p>
+              {errors.painScore
+                ? <p className="text-xs text-destructive">{errors.painScore.message}</p>
+                : <p className="text-xs text-muted-foreground">0〜10（高いほど強い痛み）</p>}
             </div>
             <div className="space-y-1">
               <Label>浮腫</Label>
@@ -419,6 +460,7 @@ export function VitalInputForm({ careRecipientId, recipientName, mode = 'create'
             <div className="space-y-1">
               <Label>尿量 (mL/日)</Label>
               <Input type="number" {...register('urineOutput')} placeholder="例: 1200" />
+              {errors.urineOutput && <p className="text-xs text-destructive">{errors.urineOutput.message}</p>}
             </div>
             <div className="col-span-2 space-y-1">
               <Label>メモ</Label>
