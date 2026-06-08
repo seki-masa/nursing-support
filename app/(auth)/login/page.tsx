@@ -17,11 +17,12 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [registered, setRegistered] = useState(false)
+  const [reset, setReset] = useState(false)
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('registered') === '1') {
-      setRegistered(true)
-    }
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('registered') === '1') setRegistered(true)
+    if (params.get('reset') === '1') setReset(true)
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,6 +62,11 @@ export default function LoginPage() {
               アカウント登録が完了しました。ログインしてください。
             </p>
           )}
+          {reset && (
+            <p className="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-md mb-4">
+              パスワードを再設定しました。新しいパスワードでログインしてください。
+            </p>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">メールアドレス</Label>
@@ -92,7 +98,12 @@ export default function LoginPage() {
               {loading ? 'ログイン中...' : 'ログイン'}
             </Button>
           </form>
-          <div className="mt-6 pt-4 border-t space-y-2 text-center text-sm">
+          <div className="mt-4 text-center text-sm">
+            <Link href="/reset-password" className="text-blue-600 hover:underline">
+              パスワードをお忘れの方
+            </Link>
+          </div>
+          <div className="mt-4 pt-4 border-t space-y-2 text-center text-sm">
             <p className="text-muted-foreground">アカウントをお持ちでない方</p>
             <div className="flex flex-col gap-1.5">
               <Link href="/register/account" className="text-blue-600 hover:underline">

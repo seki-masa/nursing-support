@@ -74,8 +74,21 @@ model User {
   businessId   String
   business     Business @relation(fields: [businessId], references: [id])
   vitals       Vital[]
+  passwordResetTokens PasswordResetToken[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique // ランダムトークンのSHA-256ハッシュ
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model CareRecipient {
