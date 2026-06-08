@@ -10,7 +10,21 @@ async function main() {
     return
   }
 
-  // 管理者ユーザー作成
+  // デフォルト事業者作成
+  const business = await prisma.business.upsert({
+    where: { code: 'BIZ-DEMO0001' },
+    update: {},
+    create: {
+      code: 'BIZ-DEMO0001',
+      companyName: 'デモ介護施設',
+      address: '東京都千代田区1-1-1',
+      contactName: '管理者',
+      phone: '03-0000-0000',
+      email: 'admin@example.com',
+    },
+  })
+
+  // 管理者ユーザ作成
   const adminPassword = await bcrypt.hash('admin123', 10)
   const admin = await prisma.user.upsert({
     where: { email: 'admin@example.com' },
@@ -20,6 +34,7 @@ async function main() {
       email: 'admin@example.com',
       passwordHash: adminPassword,
       role: 'ADMIN',
+      businessId: business.id,
     },
   })
 
@@ -32,6 +47,7 @@ async function main() {
       email: 'staff@example.com',
       passwordHash: staffPassword,
       role: 'STAFF',
+      businessId: business.id,
     },
   })
 
@@ -64,6 +80,7 @@ async function main() {
   // 介護対象者1: 危篤
   const recipient1 = await prisma.careRecipient.create({
     data: {
+      businessId: business.id,
       name: '田中 太郎',
       nameKana: 'たなか たろう',
       gender: Gender.MALE,
@@ -96,6 +113,7 @@ async function main() {
   // 介護対象者2: 要注意
   const recipient2 = await prisma.careRecipient.create({
     data: {
+      businessId: business.id,
       name: '山田 花子',
       nameKana: 'やまだ はなこ',
       gender: Gender.FEMALE,
@@ -120,6 +138,7 @@ async function main() {
   // 介護対象者3: 健康
   const recipient3 = await prisma.careRecipient.create({
     data: {
+      businessId: business.id,
       name: '鈴木 次郎',
       nameKana: 'すずき じろう',
       gender: Gender.MALE,
@@ -142,6 +161,7 @@ async function main() {
   // 介護対象者4: 経過観察
   const recipient4 = await prisma.careRecipient.create({
     data: {
+      businessId: business.id,
       name: '佐藤 美子',
       nameKana: 'さとう よしこ',
       gender: Gender.FEMALE,
@@ -161,6 +181,7 @@ async function main() {
   // 介護対象者5: 重篤
   const recipient5 = await prisma.careRecipient.create({
     data: {
+      businessId: business.id,
       name: '高橋 勇',
       nameKana: 'たかはし いさむ',
       gender: Gender.MALE,

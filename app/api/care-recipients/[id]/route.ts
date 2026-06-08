@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
 const updateSchema = z.object({
+  expectedUpdatedAt: z.string(),
   name: z.string().min(1).optional(),
   nameKana: z.string().min(1).optional(),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
@@ -22,13 +23,14 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
 
+  const businessId = (session.user as { businessId?: string }).businessId
+
   const recipient = await prisma.careRecipient.findFirst({
-    where: { id: params.id, deletedAt: null },
+    where: { id: params.id, deletedAt: null, businessId },
     include: {
       medicalConditions: { orderBy: { createdAt: 'asc' } },
       allergies: { orderBy: { createdAt: 'asc' } },
       families: { include: { family: true } },
-      // 最新ステータスのバイタル（死亡日時・退院日時の取得も兼ねる）
       vitals: {
         where: { status: { not: null } },
         orderBy: { recordedAt: 'desc' },
@@ -47,6 +49,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const result = {
     ...recipient,
     birthDate: recipient.birthDate.toISOString(),
+    updatedAt: recipient.updatedAt.toISOString(),
     status: latestStatusVital?.status ?? null,
     deceasedAt: latestStatusVital?.deceasedAt?.toISOString() ?? null,
     dischargedAt: latestStatusVital?.dischargedAt?.toISOString() ?? null,
@@ -67,7 +70,25 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { medicalConditions, allergies, birthDate, ...data } = parsed.data
+  const { expectedUpdatedAt, medicalConditions, allergies, birthDate, ...data } = parsed.data
+
+  const businessId = (session.user as { businessId?: string }).businessId
+
+  // 削除・競合チェック
+  const current = await prisma.careRecipient.findFirst({
+    where: { id: params.id, businessId },
+    select: { deletedAt: true, updatedAt: true },
+  })
+
+  if (!current) {
+    return NextResponse.json({ code: 'DELETED', error: 'この介護対象者は既に削除されています' }, { status: 410 })
+  }
+  if (current.deletedAt !== null) {
+    return NextResponse.json({ code: 'DELETED', error: 'この介護対象者は既に削除されています' }, { status: 410 })
+  }
+  if (current.updatedAt.toISOString() !== expectedUpdatedAt) {
+    return NextResponse.json({ code: 'CONFLICT', error: '他のユーザがこのデータを編集しました。最新のデータを確認してください' }, { status: 409 })
+  }
 
   const updated = await prisma.$transaction(async (tx) => {
     if (medicalConditions !== undefined) {
@@ -103,6 +124,18 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+  if ((session.user as { role?: string }).role !== 'ADMIN') {
+    return NextResponse.json({ error: '管理者権限が必要です' }, { status: 403 })
+  }
+
+  const businessId = (session.user as { businessId?: string }).businessId
+  const target = await prisma.careRecipient.findFirst({
+    where: { id: params.id, businessId },
+    select: { id: true },
+  })
+  if (!target) {
+    return NextResponse.json({ error: '対象者が見つかりません' }, { status: 404 })
+  }
 
   await prisma.careRecipient.update({
     where: { id: params.id },

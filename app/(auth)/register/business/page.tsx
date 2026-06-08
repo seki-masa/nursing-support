@@ -1,0 +1,212 @@
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { HeartPulse, CheckCircle2 } from 'lucide-react'
+
+export default function BusinessRegisterPage() {
+  const [form, setForm] = useState({
+    companyName: '',
+    address: '',
+    contactName: '',
+    phone: '',
+    email: '',
+  })
+  const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<keyof typeof form, string>>({
+    companyName: '',
+    address: '',
+    contactName: '',
+    phone: '',
+    email: '',
+  })
+  const [loading, setLoading] = useState(false)
+  const [issuedCode, setIssuedCode] = useState<string | null>(null)
+
+  const LABELS: Record<keyof typeof form, string> = {
+    companyName: '会社名',
+    address: '会社住所',
+    contactName: '担当者名',
+    phone: '電話番号',
+    email: 'メールアドレス',
+  }
+
+  // 各項目の入力チェック。問題なければ空文字を返す
+  const validateField = (key: keyof typeof form, value: string): string => {
+    const v = value.trim()
+    if (!v) return `${LABELS[key]}を入力してください`
+    if (key === 'phone') {
+      if (!/^[0-9-]+$/.test(v)) return '半角数字とハイフンのみで入力してください'
+      if (!/^0\d{9,10}$/.test(v.replace(/-/g, ''))) {
+        return '正しい電話番号を入力してください（市外局番から数字10〜11桁）'
+      }
+    }
+    if (key === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+      return '正しいメールアドレスを入力してください'
+    }
+    return ''
+  }
+
+  const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setForm((prev) => ({ ...prev, [key]: value }))
+    // 既にエラー表示中の項目は入力に追従して再検証
+    if (fieldErrors[key]) {
+      setFieldErrors((prev) => ({ ...prev, [key]: validateField(key, value) }))
+    }
+  }
+
+  const handleBlur = (key: keyof typeof form) => (e: React.FocusEvent<HTMLInputElement>) => {
+    setFieldErrors((prev) => ({ ...prev, [key]: validateField(key, e.target.value) }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const nextErrors = (Object.keys(form) as (keyof typeof form)[]).reduce(
+      (acc, key) => ({ ...acc, [key]: validateField(key, form[key]) }),
+      {} as Record<keyof typeof form, string>,
+    )
+    setFieldErrors(nextErrors)
+    if (Object.values(nextErrors).some(Boolean)) return
+
+    setLoading(true)
+    setError('')
+
+    const res = await fetch('/api/businesses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    })
+
+    setLoading(false)
+    if (res.ok) {
+      const data = await res.json()
+      setIssuedCode(data.code)
+    } else {
+      setError('登録に失敗しました。入力内容をご確認ください。')
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 py-8">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="text-center pb-2">
+          <div className="flex justify-center mb-4">
+            <div className="p-3 bg-blue-600 rounded-full">
+              <HeartPulse className="h-8 w-8 text-white" />
+            </div>
+          </div>
+          <CardTitle className="text-2xl font-bold">事業者登録</CardTitle>
+          <CardDescription>事業者情報を入力してください</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {issuedCode ? (
+            <div className="space-y-4 text-center">
+              <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto" />
+              <p className="text-sm">事業者登録が完了しました。</p>
+              <div className="bg-blue-50 border border-blue-200 rounded-md py-4">
+                <p className="text-xs text-muted-foreground mb-1">事業者ID</p>
+                <p className="text-2xl font-bold tracking-wider text-blue-700">{issuedCode}</p>
+              </div>
+              <p className="text-sm text-muted-foreground !mb-4">
+                この事業者IDをご入力のメールアドレスにも送信しました。<br />
+                この事業者IDを使ってアカウント新規登録を行ってください。
+              </p>
+              <Link href="/register/account">
+                <Button className="w-full">アカウント新規登録へ</Button>
+              </Link>
+              <Link href="/login" className="block text-sm text-blue-600 hover:underline">
+                ログイン画面へ戻る
+              </Link>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+              <div className="space-y-2">
+                <Label htmlFor="companyName">会社名</Label>
+                <Input
+                  id="companyName"
+                  placeholder="〇〇介護サービス株式会社"
+                  value={form.companyName}
+                  onChange={update('companyName')}
+                  onBlur={handleBlur('companyName')}
+                  aria-invalid={!!fieldErrors.companyName}
+                  required
+                />
+                {fieldErrors.companyName && <p className="text-sm text-red-600">{fieldErrors.companyName}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="address">会社住所</Label>
+                <Input
+                  id="address"
+                  placeholder="東京都千代田区1-1-1"
+                  value={form.address}
+                  onChange={update('address')}
+                  onBlur={handleBlur('address')}
+                  aria-invalid={!!fieldErrors.address}
+                  required
+                />
+                {fieldErrors.address && <p className="text-sm text-red-600">{fieldErrors.address}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contactName">担当者名</Label>
+                <Input
+                  id="contactName"
+                  placeholder="山田 太郎"
+                  value={form.contactName}
+                  onChange={update('contactName')}
+                  onBlur={handleBlur('contactName')}
+                  aria-invalid={!!fieldErrors.contactName}
+                  required
+                />
+                {fieldErrors.contactName && <p className="text-sm text-red-600">{fieldErrors.contactName}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">電話番号</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  inputMode="tel"
+                  maxLength={13}
+                  placeholder="03-1234-5678"
+                  value={form.phone}
+                  onChange={update('phone')}
+                  onBlur={handleBlur('phone')}
+                  aria-invalid={!!fieldErrors.phone}
+                  required
+                />
+                {fieldErrors.phone && <p className="text-sm text-red-600">{fieldErrors.phone}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">メールアドレス</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="example@mail.com"
+                  value={form.email}
+                  onChange={update('email')}
+                  onBlur={handleBlur('email')}
+                  aria-invalid={!!fieldErrors.email}
+                  autoComplete="email"
+                  required
+                />
+                {fieldErrors.email && <p className="text-sm text-red-600">{fieldErrors.email}</p>}
+              </div>
+              {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md">{error}</p>}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? '登録中...' : '事業者を登録'}
+              </Button>
+              <Link href="/login" className="block text-center text-sm text-blue-600 hover:underline">
+                ログイン画面へ戻る
+              </Link>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

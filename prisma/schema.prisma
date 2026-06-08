@@ -51,15 +51,44 @@ enum Role {
   STAFF
 }
 
+model Business {
+  id          String          @id @default(cuid())
+  code        String          @unique // 事業者ID（短い英数字コード）
+  companyName String
+  address     String
+  contactName String
+  phone       String
+  email       String
+  users       User[]
+  recipients  CareRecipient[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
   email        String   @unique
   passwordHash String
   role         Role     @default(STAFF)
+  businessId   String
+  business     Business @relation(fields: [businessId], references: [id])
   vitals       Vital[]
+  passwordResetTokens PasswordResetToken[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique // ランダムトークンのSHA-256ハッシュ
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model CareRecipient {
@@ -72,6 +101,8 @@ model CareRecipient {
   room              String?
   notes             String?
   deletedAt         DateTime?
+  businessId        String
+  business          Business              @relation(fields: [businessId], references: [id])
   families          CareRecipientFamily[]
   medicalConditions MedicalCondition[]
   allergies         Allergy[]

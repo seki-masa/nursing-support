@@ -44,6 +44,7 @@ export function ProfileEditForm({ recipient, mode }: ProfileEditFormProps) {
   )
   const [families, setFamilies] = useState<FamilyItem[]>(recipient?.families ?? [])
   const [saving, setSaving] = useState(false)
+  const updatedAtRef = recipient?.updatedAt ?? ''
 
   const {
     register,
@@ -73,6 +74,7 @@ export function ProfileEditForm({ recipient, mode }: ProfileEditFormProps) {
         notes: data.notes || null,
         medicalConditions,
         allergies,
+        ...(mode === 'edit' ? { expectedUpdatedAt: updatedAtRef } : {}),
       }
 
       const url = mode === 'create'
@@ -86,10 +88,21 @@ export function ProfileEditForm({ recipient, mode }: ProfileEditFormProps) {
         body: JSON.stringify(body),
       })
 
+      if (res.status === 410) {
+        toast({ title: 'この介護対象者は既に削除されています', variant: 'destructive' })
+        window.dispatchEvent(new CustomEvent('careRecipientsUpdated'))
+        router.push('/dashboard')
+        return
+      }
+      if (res.status === 409) {
+        toast({ title: '他のユーザがこのデータを編集しました。最新のデータを確認してください', variant: 'destructive' })
+        return
+      }
       if (!res.ok) throw new Error()
 
       const saved = await res.json()
       toast({ title: mode === 'create' ? '登録しました' : '更新しました' })
+      window.dispatchEvent(new CustomEvent('careRecipientsUpdated'))
       router.push(`/care-recipients/${saved.id}`)
       router.refresh()
     } catch {

@@ -90,14 +90,14 @@ export function VitalDashboard({ careRecipientId }: Props) {
             size="sm"
             onClick={() => router.push(`/care-recipients/${recipient.id}`)}
           >
-            <User2 className="h-4 w-4 mr-1.5" />
+            <User2 className="h-4 w-4" />
             プロフィール
           </Button>
           <Button
             size="sm"
             onClick={() => router.push(`/care-recipients/${recipient.id}/vitals/new`)}
           >
-            <Plus className="h-4 w-4 mr-1.5" />
+            <Plus className="h-4 w-4" />
             バイタル入力
           </Button>
         </div>
