@@ -433,7 +433,7 @@ export function VitalInputForm({ careRecipientId, recipientName, mode = 'create'
             </div>
             <div className="space-y-1">
               <Label>疼痛スコア (NRS 0-10)</Label>
-              <Input type="number" min="0" max="10" {...register('painScore')} placeholder="例: 2" />
+              <Input type="number" {...register('painScore')} placeholder="例: 2" />
               {errors.painScore
                 ? <p className="text-xs text-destructive">{errors.painScore.message}</p>
                 : <p className="text-xs text-muted-foreground">0〜10（高いほど強い痛み）</p>}
