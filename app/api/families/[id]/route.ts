@@ -24,6 +24,15 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
+  const businessId = (session.user as { businessId?: string }).businessId
+  const target = await prisma.family.findFirst({
+    where: { id: params.id, businessId },
+    select: { id: true },
+  })
+  if (!target) {
+    return NextResponse.json({ error: '家族が見つかりません' }, { status: 404 })
+  }
+
   const family = await prisma.family.update({
     where: { id: params.id },
     data: parsed.data,
@@ -35,6 +44,15 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 export async function DELETE(req: NextRequest, { params }: Params) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+
+  const businessId = (session.user as { businessId?: string }).businessId
+  const target = await prisma.family.findFirst({
+    where: { id: params.id, businessId },
+    select: { id: true },
+  })
+  if (!target) {
+    return NextResponse.json({ error: '家族が見つかりません' }, { status: 404 })
+  }
 
   const { searchParams } = new URL(req.url)
   const careRecipientId = searchParams.get('careRecipientId') ?? undefined

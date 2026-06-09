@@ -18,6 +18,16 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
+  const businessId = (session.user as { businessId?: string }).businessId
+  // 対象者・家族とも自事業者のものであることを確認（越境紐付け防止）
+  const [recipient, family] = await Promise.all([
+    prisma.careRecipient.findFirst({ where: { id: params.id, businessId }, select: { id: true } }),
+    prisma.family.findFirst({ where: { id: parsed.data.familyId, businessId }, select: { id: true } }),
+  ])
+  if (!recipient || !family) {
+    return NextResponse.json({ error: '対象が見つかりません' }, { status: 404 })
+  }
+
   await prisma.careRecipientFamily.upsert({
     where: {
       careRecipientId_familyId: {

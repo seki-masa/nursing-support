@@ -16,7 +16,10 @@ export async function GET() {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
 
+  const businessId = (session.user as { businessId?: string }).businessId
+
   const families = await prisma.family.findMany({
+    where: { businessId },
     orderBy: { name: 'asc' },
   })
 
@@ -33,6 +36,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const family = await prisma.family.create({ data: parsed.data })
+  const businessId = (session.user as { businessId?: string }).businessId
+  if (!businessId) return NextResponse.json({ error: '事業者が特定できません' }, { status: 400 })
+
+  const family = await prisma.family.create({ data: { ...parsed.data, businessId } })
   return NextResponse.json(family, { status: 201 })
 }

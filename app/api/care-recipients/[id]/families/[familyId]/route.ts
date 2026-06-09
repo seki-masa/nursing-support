@@ -9,12 +9,20 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
 
-  await prisma.careRecipientFamily.delete({
+  const businessId = (session.user as { businessId?: string }).businessId
+  // 対象者が自事業者のものであることを確認（越境の紐付け解除を防止）
+  const recipient = await prisma.careRecipient.findFirst({
+    where: { id: params.id, businessId },
+    select: { id: true },
+  })
+  if (!recipient) {
+    return NextResponse.json({ error: '対象が見つかりません' }, { status: 404 })
+  }
+
+  await prisma.careRecipientFamily.deleteMany({
     where: {
-      careRecipientId_familyId: {
-        careRecipientId: params.id,
-        familyId: params.familyId,
-      },
+      careRecipientId: params.id,
+      familyId: params.familyId,
     },
   })
 

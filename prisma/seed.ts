@@ -58,6 +58,7 @@ async function main() {
       relationship: '長男',
       phone: '090-1234-5678',
       email: 'tanaka.ichiro@example.com',
+      businessId: business.id,
     },
   })
 
@@ -66,6 +67,7 @@ async function main() {
       name: '田中 花子',
       relationship: '長女',
       phone: '080-2345-6789',
+      businessId: business.id,
     },
   })
 
@@ -74,6 +76,7 @@ async function main() {
       name: '鈴木 健太',
       relationship: '息子',
       phone: '070-3456-7890',
+      businessId: business.id,
     },
   })
 
