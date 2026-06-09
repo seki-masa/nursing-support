@@ -6,15 +6,20 @@ import { z } from 'zod'
 
 const updateSchema = z.object({
   expectedUpdatedAt: z.string(),
-  name: z.string().min(1).optional(),
-  nameKana: z.string().min(1).optional(),
+  name: z.string().min(1).max(100).optional(),
+  nameKana: z.string().min(1).max(100).optional(),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
   birthDate: z.string().optional(),
   bloodType: z.enum(['A_PLUS', 'A_MINUS', 'B_PLUS', 'B_MINUS', 'O_PLUS', 'O_MINUS', 'AB_PLUS', 'AB_MINUS']).optional().nullable(),
-  room: z.string().optional().nullable(),
-  notes: z.string().optional().nullable(),
-  medicalConditions: z.array(z.string()).optional(),
-  allergies: z.array(z.string()).optional(),
+  room: z.string().max(50).optional().nullable(),
+  notes: z.string().max(2000).optional().nullable(),
+  emergencyContactName: z.string().min(1).max(100).optional(),
+  emergencyContactRelationship: z.string().min(1).max(50).optional(),
+  emergencyContactPhone: z.string().min(1).max(20).optional(),
+  emergencyContactEmail: z.string().min(1).email().max(255).optional(),
+  emergencyContactAddress: z.string().min(1).max(255).optional(),
+  medicalConditions: z.array(z.string().min(1).max(200)).max(50).optional(),
+  allergies: z.array(z.string().min(1).max(200)).max(50).optional(),
 })
 
 type Params = { params: { id: string } }

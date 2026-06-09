@@ -25,6 +25,7 @@ import {
   ArrowLeft,
   Pencil,
   Trash2,
+  PhoneCall,
 } from 'lucide-react'
 
 interface ProfileViewProps {
@@ -155,6 +156,25 @@ export function ProfileView({ recipient, currentUserRole, onDelete }: ProfileVie
           </CardContent>
         </Card>
       </div>
+
+      {/* Emergency contact */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <PhoneCall className="h-4 w-4 text-rose-500" />
+            緊急連絡先
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <InfoRow label="氏名" value={recipient.emergencyContactName} />
+            <InfoRow label="続柄" value={recipient.emergencyContactRelationship} />
+            <InfoRow label="電話" value={recipient.emergencyContactPhone} />
+            <InfoRow label="メール" value={recipient.emergencyContactEmail} />
+            <InfoRow label="住所" value={recipient.emergencyContactAddress} />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Families */}
       <Card>

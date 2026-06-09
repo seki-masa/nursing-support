@@ -58,6 +58,7 @@ async function main() {
       relationship: '長男',
       phone: '090-1234-5678',
       email: 'tanaka.ichiro@example.com',
+      businessId: business.id,
     },
   })
 
@@ -66,6 +67,7 @@ async function main() {
       name: '田中 花子',
       relationship: '長女',
       phone: '080-2345-6789',
+      businessId: business.id,
     },
   })
 
@@ -74,6 +76,7 @@ async function main() {
       name: '鈴木 健太',
       relationship: '息子',
       phone: '070-3456-7890',
+      businessId: business.id,
     },
   })
 
@@ -88,6 +91,11 @@ async function main() {
       bloodType: BloodType.A_PLUS,
       room: '101号室',
       notes: '心臓病の既往あり。家族への連絡を優先。',
+      emergencyContactName: '田中 健一',
+      emergencyContactRelationship: '長男',
+      emergencyContactPhone: '090-1111-2222',
+      emergencyContactEmail: 'kenichi.tanaka@example.com',
+      emergencyContactAddress: '東京都新宿区西新宿1-1-1',
       medicalConditions: {
         create: [
           { name: '慢性心不全' },
@@ -121,6 +129,11 @@ async function main() {
       bloodType: BloodType.O_PLUS,
       room: '203号室',
       notes: '転倒リスク高。歩行補助が必要。',
+      emergencyContactName: '山田 良子',
+      emergencyContactRelationship: '長女',
+      emergencyContactPhone: '080-3333-4444',
+      emergencyContactEmail: 'yoshiko.yamada@example.com',
+      emergencyContactAddress: '東京都世田谷区三軒茶屋2-2-2',
       medicalConditions: {
         create: [
           { name: '骨粗鬆症' },
@@ -145,6 +158,11 @@ async function main() {
       birthDate: new Date('1942-11-08'),
       bloodType: BloodType.B_MINUS,
       room: '305号室',
+      emergencyContactName: '鈴木 三郎',
+      emergencyContactRelationship: '弟',
+      emergencyContactPhone: '090-5555-6666',
+      emergencyContactEmail: 'saburo.suzuki@example.com',
+      emergencyContactAddress: '神奈川県横浜市中区本町3-3-3',
       medicalConditions: {
         create: [
           { name: '高脂血症' },
@@ -169,6 +187,11 @@ async function main() {
       bloodType: BloodType.AB_PLUS,
       room: '402号室',
       notes: '先月退院。経過観察中。',
+      emergencyContactName: '佐藤 隆',
+      emergencyContactRelationship: '夫',
+      emergencyContactPhone: '080-7777-8888',
+      emergencyContactEmail: 'takashi.sato@example.com',
+      emergencyContactAddress: '埼玉県さいたま市大宮区桜木町4-4-4',
       medicalConditions: {
         create: [
           { name: '脳梗塞後遺症' },
@@ -189,6 +212,11 @@ async function main() {
       bloodType: BloodType.A_MINUS,
       room: 'ICU-1',
       notes: '肺炎治療中。酸素投与中。',
+      emergencyContactName: '高橋 恵子',
+      emergencyContactRelationship: '妻',
+      emergencyContactPhone: '090-9999-0000',
+      emergencyContactEmail: 'keiko.takahashi@example.com',
+      emergencyContactAddress: '千葉県千葉市中央区中央5-5-5',
       medicalConditions: {
         create: [
           { name: '肺炎' },

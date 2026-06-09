@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { format, differenceInYears } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { StatusBadge } from '@/components/sidebar/StatusBadge'
 import { VitalCard, BloodPressureCard } from './VitalCard'
@@ -19,28 +20,48 @@ import {
   Plus,
   Clock,
   Bluetooth,
+  Pencil,
 } from 'lucide-react'
 
 interface Props {
   careRecipientId: string
 }
 
+// グラフの取得期間（days=null は全期間）
+const PERIOD_OPTIONS: { value: string; label: string; days: number | null }[] = [
+  { value: 'all', label: '全期間', days: null },
+  { value: '365', label: '1年間', days: 365 },
+  { value: '180', label: '6か月', days: 180 },
+  { value: '30', label: '1か月', days: 30 },
+  { value: '7', label: '1週間', days: 7 },
+]
+
 export function VitalDashboard({ careRecipientId }: Props) {
   const router = useRouter()
   const [recipient, setRecipient] = useState<CareRecipientDetail | null>(null)
   const [vitals, setVitals] = useState<VitalRecord[]>([])
   const [loading, setLoading] = useState(true)
+  const [period, setPeriod] = useState('30')
 
   useEffect(() => {
     setLoading(true)
     Promise.all([
       fetch(`/api/care-recipients/${careRecipientId}`).then((r) => r.json()),
-      fetch(`/api/care-recipients/${careRecipientId}/vitals?days=30`).then((r) => r.json()),
+      // 最新バイタル表示と独立させるため全期間で取得し、グラフ側で期間フィルタする
+      fetch(`/api/care-recipients/${careRecipientId}/vitals?days=all`).then((r) => r.json()),
     ]).then(([rec, vits]) => {
       setRecipient(rec)
       setVitals(Array.isArray(vits) ? vits : [])
     }).finally(() => setLoading(false))
   }, [careRecipientId])
+
+  // 選択期間でグラフ用データを絞り込み（全期間は絞り込みなし）
+  const filteredVitals = useMemo(() => {
+    const opt = PERIOD_OPTIONS.find((o) => o.value === period)
+    if (!opt?.days) return vitals
+    const cutoff = Date.now() - opt.days * 24 * 60 * 60 * 1000
+    return vitals.filter((v) => new Date(v.recordedAt).getTime() >= cutoff)
+  }, [vitals, period])
 
   if (loading) {
     return <div className="p-8 text-center text-muted-foreground">読み込み中...</div>
@@ -80,6 +101,18 @@ export function VitalDashboard({ careRecipientId }: Props) {
                   <Clock className="h-3.5 w-3.5" />
                   最終記録: {format(new Date(latest.recordedAt), 'M月d日 HH:mm', { locale: ja })}
                 </span>
+              </>
+            )}
+            {recipient.status === 'DECEASED' && recipient.deceasedAt && (
+              <>
+                <span>•</span>
+                <span className="whitespace-nowrap">死亡時刻: {format(new Date(recipient.deceasedAt), 'M月d日 HH:mm', { locale: ja })}</span>
+              </>
+            )}
+            {recipient.status === 'DISCHARGED' && recipient.dischargedAt && (
+              <>
+                <span>•</span>
+                <span className="whitespace-nowrap">退院時刻: {format(new Date(recipient.dischargedAt), 'M月d日 HH:mm', { locale: ja })}</span>
               </>
             )}
           </div>
@@ -141,6 +174,18 @@ export function VitalDashboard({ careRecipientId }: Props) {
               　記録者: {latest.recorder.name}
             </span>
           )}
+          {latest && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto h-7 px-2 text-xs"
+              onClick={() => router.push(`/care-recipients/${recipient.id}/vitals/${latest.id}/edit`)}
+              title="最新バイタルを編集"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              編集
+            </Button>
+          )}
         </h2>
 
         {!latest ? (
@@ -174,12 +219,16 @@ export function VitalDashboard({ careRecipientId }: Props) {
               <VitalCard field="bloodSugar" value={latest.bloodSugar} />
             )}
             {latest.painScore != null && (
-              <VitalCard field="painScore" value={latest.painScore} />
+              <div className="rounded-xl border bg-white p-4 flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground font-medium">疼痛スコア</span>
+                <span className="text-2xl font-bold">{latest.painScore}</span>
+                <span className="text-xs text-muted-foreground">NRS</span>
+              </div>
             )}
             {latest.edema != null && latest.edema !== 'NONE' && (
-              <div className="rounded-xl border bg-blue-50 border-blue-200 p-4 flex flex-col gap-1">
+              <div className="rounded-xl border bg-white p-4 flex flex-col gap-1">
                 <span className="text-xs text-muted-foreground font-medium">浮腫</span>
-                <span className="text-2xl font-bold text-blue-600">{EDEMA_LABELS[latest.edema]}</span>
+                <span className="text-2xl font-bold">{EDEMA_LABELS[latest.edema]}</span>
               </div>
             )}
             {latest.notes && (
@@ -194,9 +243,23 @@ export function VitalDashboard({ careRecipientId }: Props) {
       {/* Chart section */}
       {vitals.length > 1 && (
         <div>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-            時系列グラフ（過去30日）
-          </h2>
+          <div className="flex items-center justify-between mb-3 gap-2">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              時系列グラフ
+            </h2>
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger className="w-28 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PERIOD_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value} className="text-xs">
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Card>
             <CardContent className="pt-4">
               <Tabs defaultValue="bp">
@@ -209,7 +272,7 @@ export function VitalDashboard({ careRecipientId }: Props) {
                 </TabsList>
                 {CHART_CONFIGS.map((c) => (
                   <TabsContent key={c.key} value={c.key}>
-                    <VitalChart vitals={vitals} chartKey={c.key} />
+                    <VitalChart vitals={filteredVitals} chartKey={c.key} />
                   </TabsContent>
                 ))}
               </Tabs>

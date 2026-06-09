@@ -34,9 +34,14 @@ export interface CareRecipientDetail {
   birthDate: string
   bloodType: BloodType | null
   room: string | null
-  status: CareStatus | null  // 最新バイタルから導出
-  deceasedAt: string | null  // 最新の死亡ステータスバイタルから導出
-  dischargedAt: string | null
+  emergencyContactName: string
+  emergencyContactRelationship: string
+  emergencyContactPhone: string
+  emergencyContactEmail: string
+  emergencyContactAddress: string
+  status?: CareStatus | null  // 最新バイタルから導出（ダッシュボードのみ利用。プロフィールでは未設定）
+  deceasedAt?: string | null  // 最新の死亡ステータスバイタルから導出
+  dischargedAt?: string | null
   updatedAt: string
   notes: string | null
   medicalConditions: { id: string; name: string }[]
@@ -88,6 +93,17 @@ export const STATUS_CONFIG: Record<
   HEALTHY:     { label: '健康',     badgeClass: 'bg-green-600 text-white',   textClass: 'text-green-600',  dotClass: 'bg-green-600' },
   DECEASED:    { label: '死亡',     badgeClass: 'bg-gray-500 text-white',    textClass: 'text-gray-500',   dotClass: 'bg-gray-500' },
   DISCHARGED:  { label: '退院',     badgeClass: 'bg-gray-400 text-white',    textClass: 'text-gray-400',   dotClass: 'bg-gray-400' },
+}
+
+// ステータスの危険度レベル（0=最も安全 〜 6=最も危険）。グラフ表示用
+export const STATUS_LEVEL: Record<CareStatus, number> = {
+  DISCHARGED: 0,
+  HEALTHY: 1,
+  OBSERVATION: 2,
+  CAUTION: 3,
+  SEVERE: 4,
+  CRITICAL: 5,
+  DECEASED: 6,
 }
 
 export const GENDER_LABELS: Record<Gender, string> = {

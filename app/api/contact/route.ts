@@ -5,8 +5,8 @@ import { sendContactEmail } from '@/lib/email'
 import { z } from 'zod'
 
 const schema = z.object({
-  subject: z.string().min(1, '件名を入力してください'),
-  message: z.string().min(1, 'お問い合わせ内容を入力してください'),
+  subject: z.string().min(1, '件名を入力してください').max(200),
+  message: z.string().min(1, 'お問い合わせ内容を入力してください').max(5000),
 })
 
 export async function POST(req: NextRequest) {

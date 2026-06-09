@@ -11,6 +11,11 @@ services:
       - next_cache:/app/.next
     env_file:
       - .env
+    environment:
+      # next@14.2.35はswcを14.2.33で出荷しており、起動時のlockfile自動修正が
+      # 存在しないバージョンを参照してクラッシュする（Next側のリリース不整合）。
+      # 公式の無効化フラグで自動修正をスキップする。
+      NEXT_IGNORE_INCORRECT_LOCKFILE: "1"
     depends_on:
       db:
         condition: service_healthy

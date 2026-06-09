@@ -28,6 +28,7 @@ export default async function EditProfilePage({ params }: Props) {
   const data = {
     ...recipient,
     birthDate: recipient.birthDate.toISOString(),
+    updatedAt: recipient.updatedAt.toISOString(),
     families: recipient.families.map((f) => f.family),
   }
 

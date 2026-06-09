@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendPasswordResetEmail } from '@/lib/email'
+import { APP_URL } from '@/lib/site'
+import { limiters, clientIp, rateLimitOk, tooManyRequests } from '@/lib/ratelimit'
 import { z } from 'zod'
 import crypto from 'crypto'
 
@@ -18,6 +20,11 @@ export async function POST(req: NextRequest) {
   }
 
   const { email } = parsed.data
+
+  // IP単位・メール単位の両方で制限（メール爆撃・探索の抑止）
+  if (!(await rateLimitOk(limiters.passwordResetIp, clientIp(req)))) return tooManyRequests()
+  if (!(await rateLimitOk(limiters.passwordResetEmail, email.toLowerCase()))) return tooManyRequests()
+
   const user = await prisma.user.findUnique({ where: { email } })
 
   // ユーザが存在する場合のみトークン発行・送信。
@@ -34,8 +41,7 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
-    const url = `${baseUrl}/reset-password/confirm?token=${token}`
+    const url = `${APP_URL}/reset-password/confirm?token=${token}`
     await sendPasswordResetEmail({ to: user.email, name: user.name, url })
   }
 

@@ -13,13 +13,25 @@ import {
 } from 'recharts'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
-import { VITAL_RANGES } from '@/lib/vitals-utils'
-import type { VitalRecord } from '@/types'
+import { VITAL_RANGES, EDEMA_LABELS, EDEMA_LEVEL } from '@/lib/vitals-utils'
+import { STATUS_CONFIG, STATUS_LEVEL } from '@/types'
+import type { VitalRecord, CareStatus } from '@/types'
+
+// レベル値 → ラベル（Tooltip表示用）
+const STATUS_LEVEL_LABELS: Record<number, string> = Object.fromEntries(
+  (Object.keys(STATUS_LEVEL) as CareStatus[]).map((s) => [STATUS_LEVEL[s], STATUS_CONFIG[s].label])
+)
+const EDEMA_LEVEL_LABELS: Record<number, string> = Object.fromEntries(
+  Object.entries(EDEMA_LEVEL).map(([k, lvl]) => [lvl, EDEMA_LABELS[k]])
+)
 
 const CHART_CONFIGS: {
   key: string
   label: string
-  fields: Array<{ key: keyof VitalRecord; name: string; color: string }>
+  fields: Array<{ key: keyof VitalRecord; name: string; color: string; transform?: (v: VitalRecord) => number | null }>
+  yDomain?: [number, number]
+  yTicks?: number[]
+  valueFormatter?: (n: number) => string
 }[] = [
   {
     key: 'bp',
@@ -59,6 +71,37 @@ const CHART_CONFIGS: {
     label: '血糖値',
     fields: [{ key: 'bloodSugar', name: '血糖値', color: '#d97706' }],
   },
+  {
+    key: 'consciousnessLevel',
+    label: '意識レベル',
+    fields: [{ key: 'consciousnessLevel', name: 'JCS', color: '#9333ea' }],
+  },
+  {
+    key: 'painScore',
+    label: '疼痛',
+    fields: [{ key: 'painScore', name: '疼痛スコア', color: '#e11d48' }],
+  },
+  {
+    key: 'urineOutput',
+    label: '尿量',
+    fields: [{ key: 'urineOutput', name: '尿量', color: '#0d9488' }],
+  },
+  {
+    key: 'edema',
+    label: '浮腫',
+    fields: [{ key: 'edema', name: '浮腫', color: '#0891b2', transform: (v) => EDEMA_LEVEL[(v.edema ?? '') as string] ?? null }],
+    yDomain: [0, 3],
+    yTicks: [0, 1, 2, 3],
+    valueFormatter: (n) => EDEMA_LEVEL_LABELS[n] ?? String(n),
+  },
+  {
+    key: 'status',
+    label: 'ステータス',
+    fields: [{ key: 'status', name: 'ステータス', color: '#dc2626', transform: (v) => (v.status ? STATUS_LEVEL[v.status] : null) }],
+    yDomain: [0, 6],
+    yTicks: [0, 1, 2, 3, 4, 5, 6],
+    valueFormatter: (n) => STATUS_LEVEL_LABELS[n] ?? String(n),
+  },
 ]
 
 interface VitalChartProps {
@@ -75,8 +118,12 @@ export function VitalChart({ vitals, chartKey }: VitalChartProps) {
     .map((v) => ({
       date: format(new Date(v.recordedAt), 'M/d HH:mm', { locale: ja }),
       ...config.fields.reduce((acc, f) => {
-        const val = v[f.key]
-        acc[f.key as string] = val != null ? Number(val) : null
+        if (f.transform) {
+          acc[f.key as string] = f.transform(v)
+        } else {
+          const val = v[f.key]
+          acc[f.key as string] = val != null ? Number(val) : null
+        }
         return acc
       }, {} as Record<string, number | null>),
     }))
@@ -119,12 +166,18 @@ export function VitalChart({ vitals, chartKey }: VitalChartProps) {
       <LineChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
         <XAxis dataKey="date" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
-        <YAxis tick={{ fontSize: 10 }} />
+        <YAxis
+          tick={{ fontSize: 10 }}
+          domain={config.yDomain}
+          ticks={config.yTicks}
+          allowDecimals={!config.yTicks}
+        />
         <Tooltip
           contentStyle={{ fontSize: '12px' }}
           formatter={(value: number, name: string) => {
             const field = config.fields.find((f) => f.key === name)
-            return [value, field?.name ?? name]
+            const display = config.valueFormatter ? `${value}（${config.valueFormatter(value)}）` : value
+            return [display, field?.name ?? name]
           }}
         />
         {config.fields.length > 1 && <Legend iconSize={10} wrapperStyle={{ fontSize: '11px' }} />}

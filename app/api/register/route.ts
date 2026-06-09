@@ -2,14 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
+import { limiters, clientIp, rateLimitOk, tooManyRequests } from '@/lib/ratelimit'
 
 const registerSchema = z
   .object({
-    businessCode: z.string().min(1),
-    email: z.string().email(),
-    name: z.string().min(1),
-    password: z.string().min(6),
-    passwordConfirm: z.string().min(1),
+    businessCode: z.string().min(1).max(50),
+    email: z.string().email().max(255),
+    name: z.string().min(1).max(100),
+    password: z.string().min(6).max(128),
+    passwordConfirm: z.string().min(1).max(128),
   })
   .superRefine((data, ctx) => {
     if (data.password !== data.passwordConfirm) {
@@ -23,6 +24,8 @@ const registerSchema = z
 
 // アカウント新規登録（認証不要）
 export async function POST(req: NextRequest) {
+  if (!(await rateLimitOk(limiters.accountRegister, clientIp(req)))) return tooManyRequests()
+
   const body = await req.json()
   const parsed = registerSchema.safeParse(body)
   if (!parsed.success) {

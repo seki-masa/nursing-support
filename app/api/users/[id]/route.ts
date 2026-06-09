@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { getServerSession, type Session } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 
 const updateSchema = z.object({
-  name: z.string().min(1).optional(),
-  email: z.string().email().optional(),
-  currentPassword: z.string().optional(),
-  password: z.string().min(6).optional(),
+  name: z.string().min(1).max(100).optional(),
+  email: z.string().email().max(255).optional(),
+  currentPassword: z.string().max(128).optional(),
+  password: z.string().min(6).max(128).optional(),
   role: z.enum(['ADMIN', 'STAFF']).optional(),
 })
 
 type Params = { params: { id: string } }
 
-function getSessionUser(session: Awaited<ReturnType<typeof getServerSession>>) {
+function getSessionUser(session: Session | null) {
   return session?.user as { id?: string; role?: string; businessId?: string } | undefined
 }
 

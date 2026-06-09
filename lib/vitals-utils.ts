@@ -13,7 +13,7 @@ export const VITAL_RANGES: Record<string, VitalRange> = {
   temperature:       { min: 36.0, max: 37.4, unit: '℃',    label: '体温' },
   spo2:              { min: 96,   max: 100,  unit: '%',    label: 'SpO2' },
   bloodSugar:        { min: 70,   max: 140,  unit: 'mg/dL', label: '血糖値' },
-  painScore:         { min: 0,    max: 3,    unit: '',     label: '疼痛スコア' },
+  painScore:         { min: 0,    max: 10,   unit: '',     label: '疼痛スコア' },
 }
 
 export type AbnormalLevel = 'normal' | 'warning' | 'danger'
@@ -40,6 +40,14 @@ export const EDEMA_LABELS: Record<string, string> = {
   MILD: '+',
   MODERATE: '++',
   SEVERE: '+++',
+}
+
+// 浮腫の重症度レベル（0=なし 〜 3=高度）。グラフ表示用
+export const EDEMA_LEVEL: Record<string, number> = {
+  NONE: 0,
+  MILD: 1,
+  MODERATE: 2,
+  SEVERE: 3,
 }
 
 export const JCS_LABELS: Record<number, string> = {

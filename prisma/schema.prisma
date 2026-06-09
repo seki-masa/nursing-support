@@ -61,6 +61,7 @@ model Business {
   email       String
   users       User[]
   recipients  CareRecipient[]
+  families    Family[]
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 }
@@ -100,6 +101,11 @@ model CareRecipient {
   bloodType         BloodType?
   room              String?
   notes             String?
+  emergencyContactName         String
+  emergencyContactRelationship String
+  emergencyContactPhone        String
+  emergencyContactEmail        String
+  emergencyContactAddress      String
   deletedAt         DateTime?
   businessId        String
   business          Business              @relation(fields: [businessId], references: [id])
@@ -118,6 +124,8 @@ model Family {
   phone        String?
   email        String?
   notes        String?
+  businessId   String
+  business     Business              @relation(fields: [businessId], references: [id])
   recipients   CareRecipientFamily[]
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
