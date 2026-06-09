@@ -153,7 +153,7 @@ export function FamilySection({ careRecipientId, families, onChange }: FamilySec
               <button
                 type="button"
                 onClick={() => openEdit(family)}
-                className="flex items-center gap-2 text-left flex-1 min-w-0 group"
+                className="flex items-center gap-2 text-left flex-1 min-w-0"
                 title="クリックして編集"
               >
                 <span className="truncate">
@@ -161,7 +161,7 @@ export function FamilySection({ careRecipientId, families, onChange }: FamilySec
                   <span className="text-muted-foreground ml-2">（{family.relationship}）</span>
                   {family.phone && <span className="text-muted-foreground ml-2">{family.phone}</span>}
                 </span>
-                <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0" />
               </button>
               <button
                 type="button"
