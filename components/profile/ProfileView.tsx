@@ -166,17 +166,13 @@ export function ProfileView({ recipient, currentUserRole, onDelete }: ProfileVie
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {!recipient.emergencyContactName && !recipient.emergencyContactPhone ? (
-            <p className="text-sm text-muted-foreground">登録なし</p>
-          ) : (
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <InfoRow label="氏名" value={recipient.emergencyContactName ?? '未登録'} />
-              <InfoRow label="続柄" value={recipient.emergencyContactRelationship ?? '未登録'} />
-              <InfoRow label="電話" value={recipient.emergencyContactPhone ?? '未登録'} />
-              <InfoRow label="メール" value={recipient.emergencyContactEmail ?? '未登録'} />
-              <InfoRow label="住所" value={recipient.emergencyContactAddress ?? '未登録'} />
-            </div>
-          )}
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <InfoRow label="氏名" value={recipient.emergencyContactName} />
+            <InfoRow label="続柄" value={recipient.emergencyContactRelationship} />
+            <InfoRow label="電話" value={recipient.emergencyContactPhone} />
+            <InfoRow label="メール" value={recipient.emergencyContactEmail} />
+            <InfoRow label="住所" value={recipient.emergencyContactAddress} />
+          </div>
         </CardContent>
       </Card>
 

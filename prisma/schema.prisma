@@ -100,11 +100,11 @@ model CareRecipient {
   bloodType         BloodType?
   room              String?
   notes             String?
-  emergencyContactName         String?
-  emergencyContactRelationship String?
-  emergencyContactPhone        String?
-  emergencyContactEmail        String?
-  emergencyContactAddress      String?
+  emergencyContactName         String
+  emergencyContactRelationship String
+  emergencyContactPhone        String
+  emergencyContactEmail        String
+  emergencyContactAddress      String
   deletedAt         DateTime?
   businessId        String
   business          Business              @relation(fields: [businessId], references: [id])
