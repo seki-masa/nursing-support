@@ -5,17 +5,18 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
 const updateSchema = z.object({
-  companyName: z.string().min(1),
-  address: z.string().min(1),
-  contactName: z.string().min(1),
+  companyName: z.string().min(1).max(255),
+  address: z.string().min(1).max(255),
+  contactName: z.string().min(1).max(100),
   phone: z
     .string()
     .min(1, '電話番号を入力してください')
+    .max(20)
     .regex(/^[0-9-]+$/, '電話番号は半角数字とハイフンのみで入力してください')
     .refine((v) => /^0\d{9,10}$/.test(v.replace(/-/g, '')), {
       message: '正しい電話番号を入力してください（市外局番から数字10〜11桁）',
     }),
-  email: z.string().email(),
+  email: z.string().email().max(255),
 })
 
 type Params = { params: { id: string } }

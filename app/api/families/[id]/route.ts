@@ -5,11 +5,11 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
 const updateSchema = z.object({
-  name: z.string().min(1).optional(),
-  relationship: z.string().min(1).optional(),
-  phone: z.string().optional().nullable(),
-  email: z.string().email().optional().nullable(),
-  notes: z.string().optional().nullable(),
+  name: z.string().min(1).max(100).optional(),
+  relationship: z.string().min(1).max(50).optional(),
+  phone: z.string().max(20).optional().nullable(),
+  email: z.string().email().max(255).optional().nullable(),
+  notes: z.string().max(1000).optional().nullable(),
 })
 
 type Params = { params: { id: string } }

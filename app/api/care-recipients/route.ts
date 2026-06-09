@@ -5,20 +5,20 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
 const createSchema = z.object({
-  name: z.string().min(1),
-  nameKana: z.string().min(1),
+  name: z.string().min(1).max(100),
+  nameKana: z.string().min(1).max(100),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
   birthDate: z.string(),
   bloodType: z.enum(['A_PLUS', 'A_MINUS', 'B_PLUS', 'B_MINUS', 'O_PLUS', 'O_MINUS', 'AB_PLUS', 'AB_MINUS']).optional().nullable(),
-  room: z.string().optional().nullable(),
-  notes: z.string().optional().nullable(),
-  emergencyContactName: z.string().min(1),
-  emergencyContactRelationship: z.string().min(1),
-  emergencyContactPhone: z.string().min(1),
-  emergencyContactEmail: z.string().min(1).email(),
-  emergencyContactAddress: z.string().min(1),
-  medicalConditions: z.array(z.string()).default([]),
-  allergies: z.array(z.string()).default([]),
+  room: z.string().max(50).optional().nullable(),
+  notes: z.string().max(2000).optional().nullable(),
+  emergencyContactName: z.string().min(1).max(100),
+  emergencyContactRelationship: z.string().min(1).max(50),
+  emergencyContactPhone: z.string().min(1).max(20),
+  emergencyContactEmail: z.string().min(1).email().max(255),
+  emergencyContactAddress: z.string().min(1).max(255),
+  medicalConditions: z.array(z.string().min(1).max(200)).max(50).default([]),
+  allergies: z.array(z.string().min(1).max(200)).max(50).default([]),
 })
 
 export async function GET() {

@@ -6,10 +6,10 @@ import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 
 const updateSchema = z.object({
-  name: z.string().min(1).optional(),
-  email: z.string().email().optional(),
-  currentPassword: z.string().optional(),
-  password: z.string().min(6).optional(),
+  name: z.string().min(1).max(100).optional(),
+  email: z.string().email().max(255).optional(),
+  currentPassword: z.string().max(128).optional(),
+  password: z.string().min(6).max(128).optional(),
   role: z.enum(['ADMIN', 'STAFF']).optional(),
 })
 
