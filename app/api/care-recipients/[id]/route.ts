@@ -13,6 +13,9 @@ const updateSchema = z.object({
   bloodType: z.enum(['A_PLUS', 'A_MINUS', 'B_PLUS', 'B_MINUS', 'O_PLUS', 'O_MINUS', 'AB_PLUS', 'AB_MINUS']).optional().nullable(),
   room: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
+  emergencyContactName: z.string().optional().nullable(),
+  emergencyContactRelationship: z.string().optional().nullable(),
+  emergencyContactPhone: z.string().optional().nullable(),
   medicalConditions: z.array(z.string()).optional(),
   allergies: z.array(z.string()).optional(),
 })

@@ -88,6 +88,9 @@ async function main() {
       bloodType: BloodType.A_PLUS,
       room: '101号室',
       notes: '心臓病の既往あり。家族への連絡を優先。',
+      emergencyContactName: '田中 健一',
+      emergencyContactRelationship: '長男',
+      emergencyContactPhone: '090-1111-2222',
       medicalConditions: {
         create: [
           { name: '慢性心不全' },
@@ -121,6 +124,9 @@ async function main() {
       bloodType: BloodType.O_PLUS,
       room: '203号室',
       notes: '転倒リスク高。歩行補助が必要。',
+      emergencyContactName: '山田 良子',
+      emergencyContactRelationship: '長女',
+      emergencyContactPhone: '080-3333-4444',
       medicalConditions: {
         create: [
           { name: '骨粗鬆症' },
@@ -145,6 +151,9 @@ async function main() {
       birthDate: new Date('1942-11-08'),
       bloodType: BloodType.B_MINUS,
       room: '305号室',
+      emergencyContactName: '鈴木 三郎',
+      emergencyContactRelationship: '弟',
+      emergencyContactPhone: '090-5555-6666',
       medicalConditions: {
         create: [
           { name: '高脂血症' },
@@ -169,6 +178,9 @@ async function main() {
       bloodType: BloodType.AB_PLUS,
       room: '402号室',
       notes: '先月退院。経過観察中。',
+      emergencyContactName: '佐藤 隆',
+      emergencyContactRelationship: '夫',
+      emergencyContactPhone: '080-7777-8888',
       medicalConditions: {
         create: [
           { name: '脳梗塞後遺症' },
@@ -189,6 +201,9 @@ async function main() {
       bloodType: BloodType.A_MINUS,
       room: 'ICU-1',
       notes: '肺炎治療中。酸素投与中。',
+      emergencyContactName: '高橋 恵子',
+      emergencyContactRelationship: '妻',
+      emergencyContactPhone: '090-9999-0000',
       medicalConditions: {
         create: [
           { name: '肺炎' },

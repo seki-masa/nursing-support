@@ -34,6 +34,9 @@ export interface CareRecipientDetail {
   birthDate: string
   bloodType: BloodType | null
   room: string | null
+  emergencyContactName: string | null
+  emergencyContactRelationship: string | null
+  emergencyContactPhone: string | null
   status?: CareStatus | null  // 最新バイタルから導出（ダッシュボードのみ利用。プロフィールでは未設定）
   deceasedAt?: string | null  // 最新の死亡ステータスバイタルから導出
   dischargedAt?: string | null

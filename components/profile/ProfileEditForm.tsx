@@ -24,6 +24,9 @@ const schema = z.object({
   birthDate: z.string().min(1, '誕生日は必須です'),
   bloodType: z.enum(['A_PLUS', 'A_MINUS', 'B_PLUS', 'B_MINUS', 'O_PLUS', 'O_MINUS', 'AB_PLUS', 'AB_MINUS', 'UNSET']).optional(),
   room: z.string().optional(),
+  emergencyContactName: z.string().optional(),
+  emergencyContactRelationship: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
   notes: z.string().optional(),
 })
 
@@ -60,6 +63,9 @@ export function ProfileEditForm({ recipient, mode }: ProfileEditFormProps) {
       birthDate: recipient?.birthDate ? recipient.birthDate.substring(0, 10) : '',
       bloodType: (recipient?.bloodType ?? 'UNSET') as FormData['bloodType'],
       room: recipient?.room ?? '',
+      emergencyContactName: recipient?.emergencyContactName ?? '',
+      emergencyContactRelationship: recipient?.emergencyContactRelationship ?? '',
+      emergencyContactPhone: recipient?.emergencyContactPhone ?? '',
       notes: recipient?.notes ?? '',
     },
   })
@@ -71,6 +77,9 @@ export function ProfileEditForm({ recipient, mode }: ProfileEditFormProps) {
         ...data,
         bloodType: data.bloodType === 'UNSET' ? null : (data.bloodType ?? null),
         room: data.room || null,
+        emergencyContactName: data.emergencyContactName || null,
+        emergencyContactRelationship: data.emergencyContactRelationship || null,
+        emergencyContactPhone: data.emergencyContactPhone || null,
         notes: data.notes || null,
         medicalConditions,
         allergies,
@@ -193,6 +202,27 @@ export function ProfileEditForm({ recipient, mode }: ProfileEditFormProps) {
           <div className="space-y-1">
             <Label htmlFor="room">病室</Label>
             <Input id="room" {...register('room')} placeholder="301号室" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Emergency contact */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">緊急連絡先</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <Label htmlFor="emergencyContactName">氏名</Label>
+            <Input id="emergencyContactName" {...register('emergencyContactName')} placeholder="山田 一郎" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="emergencyContactRelationship">続柄</Label>
+            <Input id="emergencyContactRelationship" {...register('emergencyContactRelationship')} placeholder="長男" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="emergencyContactPhone">電話番号</Label>
+            <Input id="emergencyContactPhone" {...register('emergencyContactPhone')} placeholder="090-1234-5678" />
           </div>
         </CardContent>
       </Card>
