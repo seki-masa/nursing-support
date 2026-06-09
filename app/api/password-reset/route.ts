@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendPasswordResetEmail } from '@/lib/email'
+import { APP_URL } from '@/lib/site'
 import { z } from 'zod'
 import crypto from 'crypto'
 
@@ -34,8 +35,7 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
-    const url = `${baseUrl}/reset-password/confirm?token=${token}`
+    const url = `${APP_URL}/reset-password/confirm?token=${token}`
     await sendPasswordResetEmail({ to: user.email, name: user.name, url })
   }
 

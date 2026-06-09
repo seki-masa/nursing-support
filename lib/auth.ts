@@ -2,8 +2,13 @@ import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
+import { assertProductionAuthEnv } from './env'
+
+// 本番で NEXTAUTH_SECRET / NEXTAUTH_URL 未設定・プレースホルダなら起動時に失敗させる
+assertProductionAuthEnv()
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: 'credentials',
