@@ -173,6 +173,8 @@ export function ProfileView({ recipient, currentUserRole, onDelete }: ProfileVie
               <InfoRow label="氏名" value={recipient.emergencyContactName ?? '未登録'} />
               <InfoRow label="続柄" value={recipient.emergencyContactRelationship ?? '未登録'} />
               <InfoRow label="電話" value={recipient.emergencyContactPhone ?? '未登録'} />
+              <InfoRow label="メール" value={recipient.emergencyContactEmail ?? '未登録'} />
+              <InfoRow label="住所" value={recipient.emergencyContactAddress ?? '未登録'} />
             </div>
           )}
         </CardContent>

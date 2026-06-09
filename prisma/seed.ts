@@ -91,6 +91,8 @@ async function main() {
       emergencyContactName: '田中 健一',
       emergencyContactRelationship: '長男',
       emergencyContactPhone: '090-1111-2222',
+      emergencyContactEmail: 'kenichi.tanaka@example.com',
+      emergencyContactAddress: '東京都新宿区西新宿1-1-1',
       medicalConditions: {
         create: [
           { name: '慢性心不全' },
@@ -127,6 +129,8 @@ async function main() {
       emergencyContactName: '山田 良子',
       emergencyContactRelationship: '長女',
       emergencyContactPhone: '080-3333-4444',
+      emergencyContactEmail: 'yoshiko.yamada@example.com',
+      emergencyContactAddress: '東京都世田谷区三軒茶屋2-2-2',
       medicalConditions: {
         create: [
           { name: '骨粗鬆症' },
@@ -154,6 +158,8 @@ async function main() {
       emergencyContactName: '鈴木 三郎',
       emergencyContactRelationship: '弟',
       emergencyContactPhone: '090-5555-6666',
+      emergencyContactEmail: 'saburo.suzuki@example.com',
+      emergencyContactAddress: '神奈川県横浜市中区本町3-3-3',
       medicalConditions: {
         create: [
           { name: '高脂血症' },
@@ -181,6 +187,8 @@ async function main() {
       emergencyContactName: '佐藤 隆',
       emergencyContactRelationship: '夫',
       emergencyContactPhone: '080-7777-8888',
+      emergencyContactEmail: 'takashi.sato@example.com',
+      emergencyContactAddress: '埼玉県さいたま市大宮区桜木町4-4-4',
       medicalConditions: {
         create: [
           { name: '脳梗塞後遺症' },
@@ -204,6 +212,8 @@ async function main() {
       emergencyContactName: '高橋 恵子',
       emergencyContactRelationship: '妻',
       emergencyContactPhone: '090-9999-0000',
+      emergencyContactEmail: 'keiko.takahashi@example.com',
+      emergencyContactAddress: '千葉県千葉市中央区中央5-5-5',
       medicalConditions: {
         create: [
           { name: '肺炎' },

@@ -24,9 +24,11 @@ const schema = z.object({
   birthDate: z.string().min(1, '誕生日は必須です'),
   bloodType: z.enum(['A_PLUS', 'A_MINUS', 'B_PLUS', 'B_MINUS', 'O_PLUS', 'O_MINUS', 'AB_PLUS', 'AB_MINUS', 'UNSET']).optional(),
   room: z.string().optional(),
-  emergencyContactName: z.string().optional(),
-  emergencyContactRelationship: z.string().optional(),
-  emergencyContactPhone: z.string().optional(),
+  emergencyContactName: z.string().min(1, '緊急連絡先の氏名は必須です'),
+  emergencyContactRelationship: z.string().min(1, '緊急連絡先の続柄は必須です'),
+  emergencyContactPhone: z.string().min(1, '緊急連絡先の電話番号は必須です'),
+  emergencyContactEmail: z.string().min(1, '緊急連絡先のメールアドレスは必須です').email('メールアドレスの形式が正しくありません'),
+  emergencyContactAddress: z.string().min(1, '緊急連絡先の住所は必須です'),
   notes: z.string().optional(),
 })
 
@@ -66,6 +68,8 @@ export function ProfileEditForm({ recipient, mode }: ProfileEditFormProps) {
       emergencyContactName: recipient?.emergencyContactName ?? '',
       emergencyContactRelationship: recipient?.emergencyContactRelationship ?? '',
       emergencyContactPhone: recipient?.emergencyContactPhone ?? '',
+      emergencyContactEmail: recipient?.emergencyContactEmail ?? '',
+      emergencyContactAddress: recipient?.emergencyContactAddress ?? '',
       notes: recipient?.notes ?? '',
     },
   })
@@ -77,9 +81,11 @@ export function ProfileEditForm({ recipient, mode }: ProfileEditFormProps) {
         ...data,
         bloodType: data.bloodType === 'UNSET' ? null : (data.bloodType ?? null),
         room: data.room || null,
-        emergencyContactName: data.emergencyContactName || null,
-        emergencyContactRelationship: data.emergencyContactRelationship || null,
-        emergencyContactPhone: data.emergencyContactPhone || null,
+        emergencyContactName: data.emergencyContactName,
+        emergencyContactRelationship: data.emergencyContactRelationship,
+        emergencyContactPhone: data.emergencyContactPhone,
+        emergencyContactEmail: data.emergencyContactEmail,
+        emergencyContactAddress: data.emergencyContactAddress,
         notes: data.notes || null,
         medicalConditions,
         allergies,
@@ -213,16 +219,29 @@ export function ProfileEditForm({ recipient, mode }: ProfileEditFormProps) {
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <Label htmlFor="emergencyContactName">氏名</Label>
+            <Label htmlFor="emergencyContactName">氏名 *</Label>
             <Input id="emergencyContactName" {...register('emergencyContactName')} placeholder="山田 一郎" />
+            {errors.emergencyContactName && <p className="text-xs text-destructive">{errors.emergencyContactName.message}</p>}
           </div>
           <div className="space-y-1">
-            <Label htmlFor="emergencyContactRelationship">続柄</Label>
+            <Label htmlFor="emergencyContactRelationship">続柄 *</Label>
             <Input id="emergencyContactRelationship" {...register('emergencyContactRelationship')} placeholder="長男" />
+            {errors.emergencyContactRelationship && <p className="text-xs text-destructive">{errors.emergencyContactRelationship.message}</p>}
           </div>
           <div className="space-y-1">
-            <Label htmlFor="emergencyContactPhone">電話番号</Label>
+            <Label htmlFor="emergencyContactPhone">電話番号 *</Label>
             <Input id="emergencyContactPhone" {...register('emergencyContactPhone')} placeholder="090-1234-5678" />
+            {errors.emergencyContactPhone && <p className="text-xs text-destructive">{errors.emergencyContactPhone.message}</p>}
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="emergencyContactEmail">メールアドレス *</Label>
+            <Input id="emergencyContactEmail" type="email" {...register('emergencyContactEmail')} placeholder="ichiro@example.com" />
+            {errors.emergencyContactEmail && <p className="text-xs text-destructive">{errors.emergencyContactEmail.message}</p>}
+          </div>
+          <div className="space-y-1 col-span-2">
+            <Label htmlFor="emergencyContactAddress">住所 *</Label>
+            <Input id="emergencyContactAddress" {...register('emergencyContactAddress')} placeholder="東京都新宿区..." />
+            {errors.emergencyContactAddress && <p className="text-xs text-destructive">{errors.emergencyContactAddress.message}</p>}
           </div>
         </CardContent>
       </Card>
