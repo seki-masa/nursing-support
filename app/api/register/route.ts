@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
+import { limiters, clientIp, rateLimitOk, tooManyRequests } from '@/lib/ratelimit'
 
 const registerSchema = z
   .object({
@@ -23,6 +24,8 @@ const registerSchema = z
 
 // アカウント新規登録（認証不要）
 export async function POST(req: NextRequest) {
+  if (!(await rateLimitOk(limiters.accountRegister, clientIp(req)))) return tooManyRequests()
+
   const body = await req.json()
   const parsed = registerSchema.safeParse(body)
   if (!parsed.success) {
