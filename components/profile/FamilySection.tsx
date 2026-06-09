@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import type { FamilyItem } from '@/types'
-import { Plus, X, Search, UserPlus } from 'lucide-react'
+import { Plus, X, Search, UserPlus, Pencil } from 'lucide-react'
 import { toast } from '@/components/ui/use-toast'
 
 interface FamilySectionProps {
@@ -24,6 +24,9 @@ export function FamilySection({ careRecipientId, families, onChange }: FamilySec
   const [showNewForm, setShowNewForm] = useState(false)
   const [newFamily, setNewFamily] = useState({ name: '', relationship: '', phone: '', email: '', notes: '' })
   const [saving, setSaving] = useState(false)
+  const [editTarget, setEditTarget] = useState<FamilyItem | null>(null)
+  const [editFamily, setEditFamily] = useState({ name: '', relationship: '', phone: '', email: '', notes: '' })
+  const [savingEdit, setSavingEdit] = useState(false)
 
   useEffect(() => {
     fetch('/api/families').then((r) => r.json()).then(setAllFamilies)
@@ -95,6 +98,46 @@ export function FamilySection({ careRecipientId, families, onChange }: FamilySec
     }
   }
 
+  const openEdit = (family: FamilyItem) => {
+    setEditTarget(family)
+    setEditFamily({
+      name: family.name,
+      relationship: family.relationship,
+      phone: family.phone ?? '',
+      email: family.email ?? '',
+      notes: family.notes ?? '',
+    })
+  }
+
+  const handleUpdate = async () => {
+    if (!editTarget || !editFamily.name.trim() || !editFamily.relationship.trim()) return
+    setSavingEdit(true)
+    try {
+      const res = await fetch(`/api/families/${editTarget.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editFamily.name,
+          relationship: editFamily.relationship,
+          phone: editFamily.phone || null,
+          email: editFamily.email || null,
+          notes: editFamily.notes || null,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      const updated: FamilyItem = await res.json()
+
+      onChange(families.map((f) => (f.id === updated.id ? updated : f)))
+      setAllFamilies((prev) => prev.map((f) => (f.id === updated.id ? updated : f)))
+      setEditTarget(null)
+      toast({ title: '家族情報を更新しました' })
+    } catch {
+      toast({ title: '更新に失敗しました', variant: 'destructive' })
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
   return (
     <div className="space-y-3">
       {/* Linked families */}
@@ -107,15 +150,24 @@ export function FamilySection({ careRecipientId, families, onChange }: FamilySec
               key={family.id}
               className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2 text-sm"
             >
-              <div>
-                <span className="font-medium">{family.name}</span>
-                <span className="text-muted-foreground ml-2">（{family.relationship}）</span>
-                {family.phone && <span className="text-muted-foreground ml-2">{family.phone}</span>}
-              </div>
+              <button
+                type="button"
+                onClick={() => openEdit(family)}
+                className="flex items-center gap-2 text-left flex-1 min-w-0 group"
+                title="クリックして編集"
+              >
+                <span className="truncate">
+                  <span className="font-medium">{family.name}</span>
+                  <span className="text-muted-foreground ml-2">（{family.relationship}）</span>
+                  {family.phone && <span className="text-muted-foreground ml-2">{family.phone}</span>}
+                </span>
+                <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+              </button>
               <button
                 type="button"
                 onClick={() => handleUnlink(family.id)}
-                className="text-muted-foreground hover:text-destructive transition-colors"
+                className="text-muted-foreground hover:text-destructive transition-colors ml-2 flex-shrink-0"
+                title="紐付けを解除"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -219,6 +271,58 @@ export function FamilySection({ careRecipientId, families, onChange }: FamilySec
             <Button variant="outline" onClick={() => setShowNewForm(false)}>キャンセル</Button>
             <Button onClick={handleCreateAndLink} disabled={saving || !newFamily.name || !newFamily.relationship}>
               {saving ? '登録中...' : '登録して紐付け'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit family dialog */}
+      <Dialog open={editTarget !== null} onOpenChange={(open) => !open && setEditTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>家族情報を編集</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>氏名 *</Label>
+                <Input
+                  value={editFamily.name}
+                  onChange={(e) => setEditFamily({ ...editFamily, name: e.target.value })}
+                  placeholder="山田 太郎"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>続柄 *</Label>
+                <Input
+                  value={editFamily.relationship}
+                  onChange={(e) => setEditFamily({ ...editFamily, relationship: e.target.value })}
+                  placeholder="長男"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>電話番号</Label>
+                <Input
+                  value={editFamily.phone}
+                  onChange={(e) => setEditFamily({ ...editFamily, phone: e.target.value })}
+                  placeholder="090-0000-0000"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>メールアドレス</Label>
+                <Input
+                  type="email"
+                  value={editFamily.email}
+                  onChange={(e) => setEditFamily({ ...editFamily, email: e.target.value })}
+                  placeholder="example@mail.com"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditTarget(null)}>キャンセル</Button>
+            <Button onClick={handleUpdate} disabled={savingEdit || !editFamily.name || !editFamily.relationship}>
+              {savingEdit ? '保存中...' : '保存'}
             </Button>
           </DialogFooter>
         </DialogContent>
