@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { toast } from '@/components/ui/use-toast'
 import { VITAL_RANGES } from '@/lib/vitals-utils'
+import { isWebBluetoothSupported, readVitalsOnce, BluetoothCancelledError } from '@/lib/bluetooth-vitals'
 import type { VitalRecord } from '@/types'
 import { ArrowLeft, Bluetooth, AlertTriangle } from 'lucide-react'
 
@@ -111,6 +112,7 @@ function vitalToFormData(v: VitalRecord): FormData {
 export function VitalInputForm({ careRecipientId, recipientName, mode = 'create', vitalId, initialVital }: VitalInputFormProps) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
+  const [fetching, setFetching] = useState(false)
   const isEdit = mode === 'edit' && !!initialVital
 
   const now = format(new Date(), "yyyy-MM-dd'T'HH:mm")
@@ -236,6 +238,43 @@ export function VitalInputForm({ careRecipientId, recipientName, mode = 'create'
     }
   }
 
+  // ウェアラブル(ESP32/MAX30102)から HR/SpO2 を取得してフォームに反映（取得できた項目のみ）
+  const handleFetchFromDevice = async () => {
+    if (!isWebBluetoothSupported()) {
+      toast({
+        title: 'このブラウザは対応していません',
+        description: 'Chrome または Edge で開いてください',
+        variant: 'destructive',
+      })
+      return
+    }
+    setFetching(true)
+    try {
+      const { heartRate, spo2 } = await readVitalsOnce()
+      if (heartRate != null) setValue('heartRate', String(heartRate), { shouldValidate: true })
+      if (spo2 != null) setValue('spo2', String(spo2), { shouldValidate: true })
+
+      if (heartRate != null && spo2 != null) {
+        toast({ title: 'SpO2・心拍数を取得しました' })
+      } else if (heartRate != null) {
+        toast({ title: '心拍数のみ取得しました', description: 'SpO2は測定できませんでした。指を当て直してください' })
+      } else if (spo2 != null) {
+        toast({ title: 'SpO2のみ取得しました', description: '心拍数は測定できませんでした。指を当て直してください' })
+      } else {
+        toast({
+          title: '測定値を取得できませんでした',
+          description: '指をセンサーに当て直してください',
+          variant: 'destructive',
+        })
+      }
+    } catch (e) {
+      if (e instanceof BluetoothCancelledError) return
+      toast({ title: 'デバイスから取得できませんでした', variant: 'destructive' })
+    } finally {
+      setFetching(false)
+    }
+  }
+
   const rangeHint = (field: string) => {
     const r = VITAL_RANGES[field]
     return r ? `正常: ${r.min}〜${r.max} ${r.unit}` : ''
@@ -263,12 +302,18 @@ export function VitalInputForm({ careRecipientId, recipientName, mode = 'create'
           </div>
         </div>
 
-        {/* Wearable placeholder */}
+        {/* Wearable acquisition (Web Bluetooth) */}
         <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
           <Bluetooth className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground flex-1">ウェアラブルデバイスから取得（近日実装予定）</span>
-          <Button type="button" variant="outline" size="sm" disabled title="近日実装予定">
-            デバイスから取得
+          <span className="text-sm text-muted-foreground flex-1">ウェアラブルデバイスから SpO2・心拍数を取得</span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleFetchFromDevice}
+            disabled={fetching}
+          >
+            {fetching ? '取得中...' : 'デバイスから取得'}
           </Button>
         </div>
 
