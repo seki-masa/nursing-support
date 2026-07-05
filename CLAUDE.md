@@ -116,5 +116,5 @@ make reset                 # DBリセット＋シードデータ再投入
 - UIはすべて**日本語**
 - コメントは**原則不要**。WHYが非自明な場合のみ1行
 - shadcn/ui コンポーネントは `components/ui/` に手動で作成済み（CLIは使わない）
-- ウェアラブル連携は未実装（プレースホルダのみ）。Web Bluetooth APIで将来実装予定
+- ウェアラブル連携: Web Bluetooth API で ESP32/MAX30102 から SpO2・心拍数を取得しバイタル入力フォームに反映（`lib/bluetooth-vitals.ts`・Chrome/Edge専用）。ファームは `MAX30102_LCD/MAX30102_LCD.ino`。他項目（体温・血圧等）は未対応
 - シードデータのパスワードは `admin123` / `staff123`（開発用）
